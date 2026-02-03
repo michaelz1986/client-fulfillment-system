@@ -11,10 +11,13 @@ import {
   InfrastructureTask,
   ActivityLogEntry,
   ProjectType,
-  NotificationPreferences
+  NotificationPreferences,
+  ProjectTemplate,
+  Employee,
+  ProjectFile
 } from '../types/index';
 import { loadState, saveState, initialAppState } from '../data/initialData';
-import { getTemplateByType } from '../data/templates';
+import { getTemplateByType, getAllTemplates } from '../data/templates';
 
 // ============================================
 // ACTION TYPES
@@ -33,9 +36,22 @@ type Action =
   | { type: 'UPDATE_MILESTONE_STATUS'; payload: { milestoneId: string; status: MilestoneStatus } }
   | { type: 'SUBMIT_MILESTONE'; payload: string }
   | { type: 'UPDATE_INFRASTRUCTURE_TASK'; payload: InfrastructureTask }
+  | { type: 'ADD_INFRASTRUCTURE_TASK'; payload: InfrastructureTask }
+  | { type: 'DELETE_INFRASTRUCTURE_TASK'; payload: string }
   | { type: 'ADD_ACTIVITY_LOG'; payload: ActivityLogEntry }
+  | { type: 'DELETE_ACTIVITY_LOG'; payload: string }
   | { type: 'UPDATE_USER_PREFERENCES'; payload: { userId: string; preferences: NotificationPreferences; phone?: string } }
   | { type: 'CASCADE_DEADLINES'; payload: { projectId: string; fromMilestoneOrder: number; delayDays: number } }
+  | { type: 'CREATE_TEMPLATE'; payload: ProjectTemplate }
+  | { type: 'UPDATE_TEMPLATE'; payload: ProjectTemplate }
+  | { type: 'DELETE_TEMPLATE'; payload: string }
+  | { type: 'ADD_MILESTONE'; payload: Milestone }
+  | { type: 'DELETE_MILESTONE'; payload: string }
+  | { type: 'CREATE_EMPLOYEE'; payload: Employee }
+  | { type: 'UPDATE_EMPLOYEE'; payload: Employee }
+  | { type: 'DELETE_EMPLOYEE'; payload: string }
+  | { type: 'ADD_PROJECT_FILE'; payload: ProjectFile }
+  | { type: 'DELETE_PROJECT_FILE'; payload: string }
   | { type: 'RESET_STATE' }
   | { type: 'LOAD_STATE'; payload: AppState };
 
@@ -145,10 +161,28 @@ function appReducer(state: AppState, action: Action): AppState {
         )
       };
 
+    case 'ADD_INFRASTRUCTURE_TASK':
+      return {
+        ...state,
+        infrastructureTasks: [...state.infrastructureTasks, action.payload]
+      };
+
+    case 'DELETE_INFRASTRUCTURE_TASK':
+      return {
+        ...state,
+        infrastructureTasks: state.infrastructureTasks.filter(t => t.id !== action.payload)
+      };
+
     case 'ADD_ACTIVITY_LOG':
       return {
         ...state,
         activityLog: [...state.activityLog, action.payload]
+      };
+
+    case 'DELETE_ACTIVITY_LOG':
+      return {
+        ...state,
+        activityLog: state.activityLog.filter(a => a.id !== action.payload)
       };
 
     case 'UPDATE_USER_PREFERENCES': {
@@ -192,11 +226,80 @@ function appReducer(state: AppState, action: Action): AppState {
       };
     }
 
+    case 'CREATE_TEMPLATE':
+      return {
+        ...state,
+        customTemplates: [...(state.customTemplates || []), action.payload]
+      };
+
+    case 'UPDATE_TEMPLATE':
+      return {
+        ...state,
+        customTemplates: (state.customTemplates || []).map(t =>
+          t.id === action.payload.id ? action.payload : t
+        )
+      };
+
+    case 'DELETE_TEMPLATE':
+      return {
+        ...state,
+        customTemplates: (state.customTemplates || []).filter(t => t.id !== action.payload)
+      };
+
+    case 'ADD_MILESTONE':
+      return {
+        ...state,
+        milestones: [...state.milestones, action.payload]
+      };
+
+    case 'DELETE_MILESTONE':
+      return {
+        ...state,
+        milestones: state.milestones.filter(m => m.id !== action.payload)
+      };
+
+    case 'CREATE_EMPLOYEE':
+      return {
+        ...state,
+        employees: [...(state.employees || []), action.payload]
+      };
+
+    case 'UPDATE_EMPLOYEE':
+      return {
+        ...state,
+        employees: (state.employees || []).map(e =>
+          e.id === action.payload.id ? action.payload : e
+        )
+      };
+
+    case 'DELETE_EMPLOYEE':
+      return {
+        ...state,
+        employees: (state.employees || []).filter(e => e.id !== action.payload)
+      };
+
+    case 'ADD_PROJECT_FILE':
+      return {
+        ...state,
+        projectFiles: [...(state.projectFiles || []), action.payload]
+      };
+
+    case 'DELETE_PROJECT_FILE':
+      return {
+        ...state,
+        projectFiles: (state.projectFiles || []).filter(f => f.id !== action.payload)
+      };
+
     case 'RESET_STATE':
       return initialAppState;
 
     case 'LOAD_STATE':
-      return action.payload;
+      return { 
+        ...action.payload, 
+        customTemplates: action.payload.customTemplates || [],
+        employees: action.payload.employees || [],
+        projectFiles: action.payload.projectFiles || []
+      };
 
     default:
       return state;
@@ -218,23 +321,42 @@ interface AppContextType {
   deleteClient: (id: string) => void;
   getClientById: (id: string) => Client | undefined;
   // Projects
-  createProject: (clientId: string, title: string, type: ProjectType, startDate: Date) => Project;
+  createProject: (clientId: string, title: string, type: ProjectType, startDate: Date, customMilestones?: Milestone[], customInfrastructure?: InfrastructureTask[]) => Project;
   updateProject: (project: Project) => void;
   deleteProject: (id: string) => void;
   getProjectById: (id: string) => Project | undefined;
   getProjectsByClientId: (clientId: string) => Project[];
   // Milestones
+  addMilestone: (milestone: Omit<Milestone, 'id'>) => Milestone;
   updateMilestone: (milestone: Milestone) => void;
+  deleteMilestone: (milestoneId: string) => void;
   updateMilestoneStatus: (milestoneId: string, status: MilestoneStatus) => void;
   submitMilestone: (milestoneId: string) => void;
   getMilestonesByProjectId: (projectId: string) => Milestone[];
   getCurrentMilestoneForClient: (clientId: string) => Milestone | null;
   // Infrastructure Tasks
+  addInfrastructureTask: (task: Omit<InfrastructureTask, 'id'>) => InfrastructureTask;
   updateInfrastructureTask: (task: InfrastructureTask) => void;
+  deleteInfrastructureTask: (taskId: string) => void;
   getInfrastructureTasksByProjectId: (projectId: string) => InfrastructureTask[];
   // Activity Log
   addActivityLog: (entry: Omit<ActivityLogEntry, 'id' | 'timestamp'>) => void;
+  deleteActivityLog: (activityId: string) => void;
   getActivityLogByProjectId: (projectId: string) => ActivityLogEntry[];
+  // Templates
+  createTemplate: (template: ProjectTemplate) => void;
+  updateTemplate: (template: ProjectTemplate) => void;
+  deleteTemplate: (templateId: string) => void;
+  // Employees
+  createEmployee: (employee: Omit<Employee, 'id' | 'createdAt'>) => Employee;
+  updateEmployee: (employee: Employee) => void;
+  deleteEmployee: (employeeId: string) => void;
+  getEmployeeById: (id: string) => Employee | undefined;
+  // Project Files
+  addProjectFile: (file: Omit<ProjectFile, 'id' | 'uploadedAt'>) => ProjectFile;
+  deleteProjectFile: (fileId: string) => void;
+  getFilesByProjectId: (projectId: string) => ProjectFile[];
+  getFilesByMilestoneId: (milestoneId: string) => ProjectFile[];
   // User Preferences
   updateUserPreferences: (userId: string, preferences: NotificationPreferences, phone?: string) => void;
   // Utilities
@@ -248,19 +370,22 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 // ============================================
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(appReducer, initialAppState);
+  // Lade Zustand direkt beim Initialisieren (nicht in useEffect)
+  const [state, dispatch] = useReducer(appReducer, null, () => loadState());
+  const [isInitialized, setIsInitialized] = React.useState(false);
 
-  // Lade Zustand beim Start
+  // Markiere als initialisiert nach dem ersten Render
   useEffect(() => {
-    const savedState = loadState();
-    dispatch({ type: 'LOAD_STATE', payload: savedState });
+    setIsInitialized(true);
   }, []);
 
-  // Speichere Zustand bei Änderungen (außer currentUser)
+  // Speichere Zustand bei Änderungen (aber nicht beim initialen Laden)
   useEffect(() => {
-    const stateToSave = { ...state, currentUser: null };
-    saveState(stateToSave);
-  }, [state.clients, state.projects, state.milestones, state.infrastructureTasks, state.activityLog, state.users]);
+    if (isInitialized) {
+      const stateToSave = { ...state, currentUser: null };
+      saveState(stateToSave);
+    }
+  }, [state.clients, state.projects, state.milestones, state.infrastructureTasks, state.activityLog, state.users, state.customTemplates, state.employees, state.projectFiles, isInitialized]);
 
   // ============================================
   // AUTH FUNCTIONS
@@ -311,12 +436,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // PROJECT FUNCTIONS
   // ============================================
 
-  const createProject = (clientId: string, title: string, type: ProjectType, startDate: Date): Project => {
-    const template = getTemplateByType(type);
-    if (!template) {
-      throw new Error(`Template für Typ ${type} nicht gefunden`);
-    }
-
+  const createProject = (
+    clientId: string, 
+    title: string, 
+    type: ProjectType, 
+    startDate: Date,
+    customMilestones?: Milestone[],
+    customInfrastructure?: InfrastructureTask[]
+  ): Project => {
     const projectId = `project-${uuidv4()}`;
     const now = new Date().toISOString();
 
@@ -327,39 +454,72 @@ export function AppProvider({ children }: { children: ReactNode }) {
       title,
       type,
       cascadePolicyEnabled: true,
+      assignedEmployeeIds: [],
       createdAt: now,
       updatedAt: now
     };
 
-    // Meilensteine aus Template erstellen
-    let currentDate = startDate;
-    const milestones: Milestone[] = template.milestones.map((tmpl, index) => {
-      currentDate = addDays(currentDate, tmpl.daysOffset);
-      const dueDate = currentDate.toISOString();
+    let milestones: Milestone[];
+    let infrastructureTasks: InfrastructureTask[];
 
-      return {
+    if (customMilestones && customMilestones.length > 0) {
+      // Custom Milestones verwenden (bereits mit korrekten Daten)
+      milestones = customMilestones.map((m, index) => ({
+        ...m,
         id: `milestone-${uuidv4()}`,
         projectId,
-        order: tmpl.order,
-        title: tmpl.title,
-        description: tmpl.description,
-        status: index === 0 ? 'open' : 'locked',
-        dueDate,
-        originalDueDate: dueDate,
-        owner: tmpl.owner,
-        category: tmpl.category,
-        actionUrl: tmpl.actionUrl,
-        actionLabel: tmpl.actionLabel
-      };
-    });
+        status: index === 0 ? 'open' : 'locked'
+      }));
+    } else {
+      // Template-basierte Milestones
+      const template = getTemplateByType(type, state.customTemplates);
+      if (!template) {
+        throw new Error(`Template für Typ ${type} nicht gefunden`);
+      }
 
-    // Infrastruktur-Tasks erstellen
-    const infrastructureTasks: InfrastructureTask[] = template.infrastructureTasks.map(taskTitle => ({
-      id: `infra-${uuidv4()}`,
-      projectId,
-      title: taskTitle,
-      completed: false
-    }));
+      let currentDate = startDate;
+      milestones = template.milestones.map((tmpl, index) => {
+        currentDate = addDays(currentDate, tmpl.daysOffset);
+        const dueDate = currentDate.toISOString();
+
+        return {
+          id: `milestone-${uuidv4()}`,
+          projectId,
+          order: tmpl.order,
+          title: tmpl.title,
+          description: tmpl.description,
+          status: index === 0 ? 'open' : 'locked',
+          dueDate,
+          originalDueDate: dueDate,
+          owner: tmpl.owner,
+          category: tmpl.category,
+          actionUrl: tmpl.actionUrl,
+          actionLabel: tmpl.actionLabel
+        };
+      });
+    }
+
+    if (customInfrastructure && customInfrastructure.length > 0) {
+      // Custom Infrastructure verwenden
+      infrastructureTasks = customInfrastructure.map(t => ({
+        ...t,
+        id: `infra-${uuidv4()}`,
+        projectId
+      }));
+    } else {
+      // Template-basierte Infrastructure
+      const template = getTemplateByType(type, state.customTemplates);
+      if (template) {
+        infrastructureTasks = template.infrastructureTasks.map(task => ({
+          id: `infra-${uuidv4()}`,
+          projectId,
+          title: typeof task === 'string' ? task : task.title,
+          completed: false
+        }));
+      } else {
+        infrastructureTasks = [];
+      }
+    }
 
     dispatch({
       type: 'CREATE_PROJECT',
@@ -396,8 +556,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // MILESTONE FUNCTIONS
   // ============================================
 
+  const addMilestone = (milestoneData: Omit<Milestone, 'id'>): Milestone => {
+    const newMilestone: Milestone = {
+      ...milestoneData,
+      id: `milestone-${uuidv4()}`
+    };
+    dispatch({ type: 'ADD_MILESTONE', payload: newMilestone });
+    return newMilestone;
+  };
+
   const updateMilestone = (milestone: Milestone) => {
     dispatch({ type: 'UPDATE_MILESTONE', payload: milestone });
+  };
+
+  const deleteMilestone = (milestoneId: string) => {
+    dispatch({ type: 'DELETE_MILESTONE', payload: milestoneId });
   };
 
   const updateMilestoneStatus = (milestoneId: string, status: MilestoneStatus) => {
@@ -494,18 +667,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // INFRASTRUCTURE TASK FUNCTIONS
   // ============================================
 
+  const addInfrastructureTask = (taskData: Omit<InfrastructureTask, 'id'>): InfrastructureTask => {
+    const newTask: InfrastructureTask = {
+      ...taskData,
+      id: `infra-${uuidv4()}`
+    };
+    dispatch({ type: 'ADD_INFRASTRUCTURE_TASK', payload: newTask });
+    return newTask;
+  };
+
   const updateInfrastructureTask = (task: InfrastructureTask) => {
     dispatch({ type: 'UPDATE_INFRASTRUCTURE_TASK', payload: task });
+  };
 
-    const project = state.projects.find(p => p.id === task.projectId);
-    if (project) {
-      addActivityLog({
-        projectId: task.projectId,
-        type: 'infrastructure_updated',
-        message: `Infrastruktur-Aufgabe "${task.title}" wurde ${task.completed ? 'erledigt' : 'als offen markiert'}.`,
-        metadata: { taskId: task.id, completed: task.completed }
-      });
-    }
+  const deleteInfrastructureTask = (taskId: string) => {
+    dispatch({ type: 'DELETE_INFRASTRUCTURE_TASK', payload: taskId });
   };
 
   const getInfrastructureTasksByProjectId = (projectId: string): InfrastructureTask[] => {
@@ -525,10 +701,82 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'ADD_ACTIVITY_LOG', payload: newEntry });
   };
 
+  const deleteActivityLog = (activityId: string) => {
+    dispatch({ type: 'DELETE_ACTIVITY_LOG', payload: activityId });
+  };
+
   const getActivityLogByProjectId = (projectId: string): ActivityLogEntry[] => {
     return state.activityLog
       .filter(a => a.projectId === projectId)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  };
+
+  // ============================================
+  // TEMPLATE FUNCTIONS
+  // ============================================
+
+  const createTemplate = (template: ProjectTemplate) => {
+    dispatch({ type: 'CREATE_TEMPLATE', payload: template });
+  };
+
+  const updateTemplate = (template: ProjectTemplate) => {
+    dispatch({ type: 'UPDATE_TEMPLATE', payload: template });
+  };
+
+  const deleteTemplate = (templateId: string) => {
+    dispatch({ type: 'DELETE_TEMPLATE', payload: templateId });
+  };
+
+  // ============================================
+  // EMPLOYEE FUNCTIONS
+  // ============================================
+
+  const createEmployee = (employeeData: Omit<Employee, 'id' | 'createdAt'>): Employee => {
+    const newEmployee: Employee = {
+      ...employeeData,
+      id: `employee-${uuidv4()}`,
+      createdAt: new Date().toISOString()
+    };
+    dispatch({ type: 'CREATE_EMPLOYEE', payload: newEmployee });
+    return newEmployee;
+  };
+
+  const updateEmployee = (employee: Employee) => {
+    dispatch({ type: 'UPDATE_EMPLOYEE', payload: employee });
+  };
+
+  const deleteEmployee = (employeeId: string) => {
+    dispatch({ type: 'DELETE_EMPLOYEE', payload: employeeId });
+  };
+
+  const getEmployeeById = (id: string): Employee | undefined => {
+    return (state.employees || []).find(e => e.id === id);
+  };
+
+  // ============================================
+  // PROJECT FILE FUNCTIONS
+  // ============================================
+
+  const addProjectFile = (fileData: Omit<ProjectFile, 'id' | 'uploadedAt'>): ProjectFile => {
+    const newFile: ProjectFile = {
+      ...fileData,
+      id: `file-${uuidv4()}`,
+      uploadedAt: new Date().toISOString()
+    };
+    dispatch({ type: 'ADD_PROJECT_FILE', payload: newFile });
+    return newFile;
+  };
+
+  const deleteProjectFile = (fileId: string) => {
+    dispatch({ type: 'DELETE_PROJECT_FILE', payload: fileId });
+  };
+
+  const getFilesByProjectId = (projectId: string): ProjectFile[] => {
+    return (state.projectFiles || []).filter(f => f.projectId === projectId);
+  };
+
+  const getFilesByMilestoneId = (milestoneId: string): ProjectFile[] => {
+    return (state.projectFiles || []).filter(f => f.milestoneId === milestoneId);
   };
 
   // ============================================
@@ -561,15 +809,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteProject,
     getProjectById,
     getProjectsByClientId,
+    addMilestone,
     updateMilestone,
+    deleteMilestone,
     updateMilestoneStatus,
     submitMilestone,
     getMilestonesByProjectId,
     getCurrentMilestoneForClient,
+    addInfrastructureTask,
     updateInfrastructureTask,
+    deleteInfrastructureTask,
     getInfrastructureTasksByProjectId,
     addActivityLog,
+    deleteActivityLog,
     getActivityLogByProjectId,
+    createTemplate,
+    updateTemplate,
+    deleteTemplate,
+    createEmployee,
+    updateEmployee,
+    deleteEmployee,
+    getEmployeeById,
+    addProjectFile,
+    deleteProjectFile,
+    getFilesByProjectId,
+    getFilesByMilestoneId,
     updateUserPreferences,
     resetState: resetAppState
   };

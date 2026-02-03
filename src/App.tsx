@@ -8,6 +8,10 @@ import ProjectList from './components/admin/ProjectList';
 import ProjectWizard from './components/admin/ProjectWizard';
 import ProjectDetail from './components/admin/ProjectDetail';
 import ClientList from './components/admin/ClientList';
+import ProductList from './components/admin/ProductList';
+import ProductEditor from './components/admin/ProductEditor';
+import AIProductGenerator from './components/admin/AIProductGenerator';
+import EmployeeList from './components/admin/EmployeeList';
 import ClientLayout from './components/client/ClientLayout';
 import ClientDashboard from './components/client/ClientDashboard';
 import ClientSettings from './components/client/ClientSettings';
@@ -34,6 +38,11 @@ function App() {
             <Route path="projects/new" element={<ProjectWizard />} />
             <Route path="projects/:id" element={<ProjectDetail />} />
             <Route path="clients" element={<ClientList />} />
+            <Route path="products" element={<ProductList />} />
+            <Route path="products/new" element={<ProductEditor />} />
+            <Route path="products/ai" element={<AIProductGenerator />} />
+            <Route path="products/:id" element={<ProductEditor />} />
+            <Route path="team" element={<EmployeeList />} />
           </Route>
 
           {/* Client Routes */}

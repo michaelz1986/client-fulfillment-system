@@ -43,45 +43,45 @@ export default function AdminDashboard() {
     <div className="p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">
+        <h1 className="text-3xl font-bold text-dark-900">
           Willkommen, {state.currentUser?.name?.split(' ')[0]}!
         </h1>
-        <p className="text-slate-600 mt-1">
+        <p className="text-dark-600 mt-1">
           Hier ist Ihre Übersicht für heute.
         </p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-dark-200">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Aktive Projekte</p>
-              <p className="text-2xl font-bold text-slate-900">{state.projects.length}</p>
+              <p className="text-sm text-dark-500">Aktive Projekte</p>
+              <p className="text-2xl font-bold text-dark-900">{state.projects.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-dark-200">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Kunden</p>
-              <p className="text-2xl font-bold text-slate-900">{state.clients.length}</p>
+              <p className="text-sm text-dark-500">Kunden</p>
+              <p className="text-2xl font-bold text-dark-900">{state.clients.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-dark-200">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,24 +89,24 @@ export default function AdminDashboard() {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Wartend auf Kunden</p>
-              <p className="text-2xl font-bold text-slate-900">{waitingOnClient}</p>
+              <p className="text-sm text-dark-500">Wartend auf Kunden</p>
+              <p className="text-2xl font-bold text-dark-900">{waitingOnClient}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-dark-200">
           <div className="flex items-center gap-4">
             <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-              criticalProjects.length > 0 ? 'bg-red-100' : 'bg-slate-100'
+              criticalProjects.length > 0 ? 'bg-red-100' : 'bg-dark-100'
             }`}>
-              <svg className={`w-6 h-6 ${criticalProjects.length > 0 ? 'text-red-600' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-6 h-6 ${criticalProjects.length > 0 ? 'text-red-600' : 'text-dark-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Kritisch</p>
-              <p className={`text-2xl font-bold ${criticalProjects.length > 0 ? 'text-red-600' : 'text-slate-900'}`}>
+              <p className="text-sm text-dark-500">Kritisch</p>
+              <p className={`text-2xl font-bold ${criticalProjects.length > 0 ? 'text-red-600' : 'text-dark-900'}`}>
                 {criticalProjects.length}
               </p>
             </div>
@@ -183,21 +183,21 @@ export default function AdminDashboard() {
 
       {/* Project List or Empty State */}
       {state.projects.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-white rounded-xl shadow-sm border border-dark-200 p-12 text-center">
+          <div className="w-16 h-16 bg-dark-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+          <h3 className="text-lg font-semibold text-dark-900 mb-2">
             Noch keine Projekte
           </h3>
-          <p className="text-slate-500 mb-6 max-w-sm mx-auto">
+          <p className="text-dark-500 mb-6 max-w-sm mx-auto">
             Erstellen Sie Ihr erstes Projekt, um das System in Aktion zu sehen.
           </p>
           <Link
             to="/admin/projects/new"
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -206,12 +206,12 @@ export default function AdminDashboard() {
           </Link>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-          <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">Aktuelle Projekte</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-dark-200">
+          <div className="p-6 border-b border-dark-200 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-dark-900">Aktuelle Projekte</h2>
             <Link
               to="/admin/projects/new"
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm"
+              className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -239,7 +239,7 @@ export default function AdminDashboard() {
                 <Link
                   key={project.id}
                   to={`/admin/projects/${project.id}`}
-                  className="flex items-center gap-6 p-6 hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-6 p-6 hover:bg-dark-50 transition-colors"
                 >
                   {/* Warning Badge */}
                   <div className="w-8 flex justify-center">
@@ -248,30 +248,30 @@ export default function AdminDashboard() {
                     ) : isOverdue ? (
                       <span className="w-3 h-3 bg-amber-500 rounded-full" />
                     ) : (
-                      <span className="w-3 h-3 bg-green-500 rounded-full" />
+                      <span className="w-3 h-3 bg-primary-500 rounded-full" />
                     )}
                   </div>
                   
                   {/* Project Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium text-slate-900 truncate">{project.title}</h3>
-                      <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full">
+                      <h3 className="font-medium text-dark-900 truncate">{project.title}</h3>
+                      <span className="px-2 py-0.5 bg-dark-100 text-dark-600 text-xs rounded-full">
                         {getProjectTypeLabel(project.type)}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-500">{client?.name}</p>
+                    <p className="text-sm text-dark-500">{client?.name}</p>
                   </div>
                   
                   {/* Progress */}
                   <div className="w-32">
-                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-2 bg-dark-100 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-blue-600 rounded-full transition-all"
+                        className="h-full bg-primary-600 rounded-full transition-all"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
-                    <p className="text-xs text-slate-500 mt-1 text-right">
+                    <p className="text-xs text-dark-500 mt-1 text-right">
                       {completedMilestones}/{milestones.length}
                     </p>
                   </div>
@@ -280,10 +280,10 @@ export default function AdminDashboard() {
                   <div className="w-48 text-right">
                     {currentMilestone ? (
                       <div>
-                        <p className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-slate-600'}`}>
+                        <p className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-dark-600'}`}>
                           {currentMilestone.title}
                         </p>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-dark-400">
                           {isOverdue 
                             ? `${daysOverdue} Tage überfällig`
                             : format(parseISO(currentMilestone.dueDate), 'd. MMM', { locale: de })
@@ -291,12 +291,12 @@ export default function AdminDashboard() {
                         </p>
                       </div>
                     ) : (
-                      <span className="text-sm text-green-600">Abgeschlossen</span>
+                      <span className="text-sm text-primary-600">Abgeschlossen</span>
                     )}
                   </div>
                   
                   {/* Arrow */}
-                  <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </Link>
@@ -304,10 +304,10 @@ export default function AdminDashboard() {
             })}
           </div>
           {state.projects.length > 5 && (
-            <div className="p-4 border-t border-slate-200 text-center">
+            <div className="p-4 border-t border-dark-200 text-center">
               <Link
                 to="/admin/projects"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
               >
                 Alle {state.projects.length} Projekte anzeigen →
               </Link>

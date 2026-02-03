@@ -20,17 +20,45 @@ export interface User {
   createdAt: string;
 }
 
+// Mitarbeiter (Projektmanager)
+export interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: string;  // z.B. "Projektmanager", "Designer", "Entwickler"
+  avatarUrl?: string;
+  calendlyUrl?: string;
+  color: string;  // Für UI-Darstellung
+  isActive: boolean;
+  createdAt: string;
+}
+
 // Kunden-Container
 export interface Client {
   id: string;
   name: string;
   email: string;
   phone?: string;
+  assignedEmployeeId?: string;  // Hauptansprechpartner
   createdAt: string;
 }
 
+// Datei-Upload
+export interface ProjectFile {
+  id: string;
+  projectId: string;
+  milestoneId?: string;
+  name: string;
+  size: number;
+  type: string;
+  uploadedBy: 'client' | 'agency';
+  uploadedAt: string;
+  url: string;  // Simuliert - in Produktion wäre das ein echter Storage-Link
+}
+
 // Projekttypen
-export type ProjectType = 'landingpage' | 'website' | 'software';
+export type ProjectType = 'landingpage' | 'website' | 'software' | 'custom';
 
 // Projekt-Container
 export interface Project {
@@ -39,6 +67,8 @@ export interface Project {
   title: string;
   type: ProjectType;
   cascadePolicyEnabled: boolean;
+  assignedEmployeeIds: string[];  // Zugewiesene Mitarbeiter
+  leadEmployeeId?: string;  // Hauptverantwortlicher
   createdAt: string;
   updatedAt: string;
 }
@@ -64,8 +94,11 @@ export interface Milestone {
   originalDueDate: string;
   owner: MilestoneOwner;
   category: MilestoneCategory;
+  assignedEmployeeId?: string;  // Zugewiesener Mitarbeiter für diesen Meilenstein
   actionUrl?: string;
   actionLabel?: string;
+  actionType?: 'calendly' | 'upload' | 'link' | 'feedback';  // Art der Action
+  feedbackNote?: string;  // Feedback/Notiz für den Kunden
   submittedAt?: string;
   completedAt?: string;
 }
@@ -114,6 +147,7 @@ export interface EscalationTracker {
 
 // Meilenstein-Vorlagen
 export interface MilestoneTemplate {
+  id?: string;  // Für benutzerdefinierte Templates
   order: number;
   title: string;
   description: string;
@@ -124,12 +158,21 @@ export interface MilestoneTemplate {
   actionLabel?: string;
 }
 
+export interface InfrastructureTemplate {
+  id?: string;
+  title: string;
+}
+
 export interface ProjectTemplate {
-  type: ProjectType;
+  id: string;
+  type: ProjectType | 'custom';
   name: string;
   description: string;
   milestones: MilestoneTemplate[];
-  infrastructureTasks: string[];
+  infrastructureTasks: InfrastructureTemplate[];
+  isCustom?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // App-Zustand
@@ -137,9 +180,12 @@ export interface AppState {
   currentUser: User | null;
   users: User[];
   clients: Client[];
+  employees: Employee[];  // Mitarbeiter
   projects: Project[];
   milestones: Milestone[];
   infrastructureTasks: InfrastructureTask[];
+  projectFiles: ProjectFile[];  // Hochgeladene Dateien
   activityLog: ActivityLogEntry[];
   escalationTrackers: EscalationTracker[];
+  customTemplates: ProjectTemplate[];  // Benutzerdefinierte Produkt-Templates
 }

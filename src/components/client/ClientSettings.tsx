@@ -31,20 +31,20 @@ export default function ClientSettings() {
   return (
     <div className="max-w-2xl">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Einstellungen</h1>
-        <p className="text-slate-600 mt-1">
+        <h1 className="text-2xl font-bold text-dark-900">Einstellungen</h1>
+        <p className="text-dark-600 mt-1">
           Verwalten Sie Ihre Benachrichtigungseinstellungen.
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <h2 className="text-lg font-semibold text-slate-900 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-dark-200 p-6">
+        <h2 className="text-lg font-semibold text-dark-900 mb-6">
           Benachrichtigungen
         </h2>
 
         {/* Telefonnummer */}
         <div className="mb-6">
-          <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-2">
+          <label htmlFor="phone" className="block text-sm font-medium text-dark-700 mb-2">
             Telefonnummer (für SMS)
           </label>
           <input
@@ -53,42 +53,42 @@ export default function ClientSettings() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="+49 170 1234567"
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            className="w-full px-4 py-3 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
           />
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-dark-500 mt-1">
             Geben Sie Ihre Telefonnummer ein, um SMS-Benachrichtigungen zu erhalten.
           </p>
         </div>
 
         {/* Benachrichtigungskanäle */}
         <div className="space-y-4 mb-8">
-          <p className="text-sm font-medium text-slate-700">
+          <p className="text-sm font-medium text-dark-700">
             Wie möchten Sie benachrichtigt werden?
           </p>
 
-          <label className="flex items-center gap-3 p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+          <label className="flex items-center gap-3 p-4 border border-dark-200 rounded-lg cursor-pointer hover:bg-dark-50 transition-colors">
             <input
               type="checkbox"
               checked={emailEnabled}
               onChange={(e) => setEmailEnabled(e.target.checked)}
-              className="w-5 h-5 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+              className="w-5 h-5 text-primary-600 border-dark-300 rounded focus:ring-primary-500"
             />
             <div>
-              <span className="font-medium text-slate-900">E-Mail</span>
-              <p className="text-sm text-slate-500">{state.currentUser?.email}</p>
+              <span className="font-medium text-dark-900">E-Mail</span>
+              <p className="text-sm text-dark-500">{state.currentUser?.email}</p>
             </div>
           </label>
 
-          <label className="flex items-center gap-3 p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+          <label className="flex items-center gap-3 p-4 border border-dark-200 rounded-lg cursor-pointer hover:bg-dark-50 transition-colors">
             <input
               type="checkbox"
               checked={smsEnabled}
               onChange={(e) => setSmsEnabled(e.target.checked)}
-              className="w-5 h-5 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+              className="w-5 h-5 text-primary-600 border-dark-300 rounded focus:ring-primary-500"
             />
             <div>
-              <span className="font-medium text-slate-900">SMS</span>
-              <p className="text-sm text-slate-500">
+              <span className="font-medium text-dark-900">SMS</span>
+              <p className="text-sm text-dark-500">
                 {phone || 'Keine Telefonnummer hinterlegt'}
               </p>
             </div>
@@ -99,13 +99,13 @@ export default function ClientSettings() {
         <div className="flex items-center gap-4">
           <button
             onClick={handleSave}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+            className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
           >
             Änderungen speichern
           </button>
 
           {saved && (
-            <span className="flex items-center gap-2 text-green-600">
+            <span className="flex items-center gap-2 text-primary-600">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>

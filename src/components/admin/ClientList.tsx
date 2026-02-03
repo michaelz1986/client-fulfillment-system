@@ -33,13 +33,13 @@ function ClientFormModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">
+        <h3 className="text-lg font-semibold text-dark-900 mb-4">
           {client ? 'Kunde bearbeiten' : 'Neuen Kunden anlegen'}
         </h3>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-dark-700 mb-1">
               Name *
             </label>
             <input
@@ -47,12 +47,12 @@ function ClientFormModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Max Mustermann"
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-dark-700 mb-1">
               E-Mail *
             </label>
             <input
@@ -60,12 +60,12 @@ function ClientFormModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="max@beispiel.de"
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-dark-700 mb-1">
               Telefon (optional)
             </label>
             <input
@@ -73,7 +73,7 @@ function ClientFormModal({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+49 170 1234567"
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
           
@@ -81,14 +81,14 @@ function ClientFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-slate-600 hover:text-slate-800"
+              className="px-4 py-2 text-dark-600 hover:text-dark-800"
             >
               Abbrechen
             </button>
             <button
               type="submit"
               disabled={!isValid}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-dark-300 disabled:cursor-not-allowed"
             >
               {client ? 'Speichern' : 'Anlegen'}
             </button>
@@ -114,8 +114,8 @@ function DeleteConfirmModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">Kunde löschen?</h3>
-        <p className="text-slate-600 mb-4">
+        <h3 className="text-lg font-semibold text-dark-900 mb-2">Kunde löschen?</h3>
+        <p className="text-dark-600 mb-4">
           Sind Sie sicher, dass Sie den Kunden "{client.name}" löschen möchten?
         </p>
         {projectCount > 0 && (
@@ -127,7 +127,7 @@ function DeleteConfirmModal({
         <div className="flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-slate-600 hover:text-slate-800"
+            className="px-4 py-2 text-dark-600 hover:text-dark-800"
           >
             Abbrechen
           </button>
@@ -184,14 +184,14 @@ export default function ClientList() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Kunden</h1>
-          <p className="text-slate-600 mt-1">
+          <h1 className="text-2xl font-bold text-dark-900">Kunden</h1>
+          <p className="text-dark-600 mt-1">
             {state.clients.length} {state.clients.length === 1 ? 'Kunde' : 'Kunden'} insgesamt
           </p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-medium px-4 py-2 rounded-lg transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -204,7 +204,7 @@ export default function ClientList() {
       <div className="mb-6">
         <div className="relative">
           <svg 
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" 
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
@@ -216,23 +216,23 @@ export default function ClientList() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Kunden suchen..."
-            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full pl-10 pr-4 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           />
         </div>
       </div>
       
       {/* Client List */}
       {filteredClients.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-white rounded-xl shadow-sm border border-dark-200 p-12 text-center">
+          <div className="w-16 h-16 bg-dark-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+          <h3 className="text-lg font-semibold text-dark-900 mb-2">
             {searchTerm ? 'Keine Kunden gefunden' : 'Noch keine Kunden'}
           </h3>
-          <p className="text-slate-500 mb-6">
+          <p className="text-dark-500 mb-6">
             {searchTerm 
               ? 'Versuchen Sie einen anderen Suchbegriff.'
               : 'Legen Sie Ihren ersten Kunden an.'
@@ -241,7 +241,7 @@ export default function ClientList() {
           {!searchTerm && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -251,23 +251,23 @@ export default function ClientList() {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-dark-200 overflow-hidden">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-dark-50 border-b border-dark-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
                   Kunde
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
                   Kontakt
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
                   Projekte
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
                   Erstellt
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-dark-500 uppercase tracking-wider">
                   Aktionen
                 </th>
               </tr>
@@ -277,40 +277,40 @@ export default function ClientList() {
                 const projectCount = getProjectsByClientId(client.id).length;
                 
                 return (
-                  <tr key={client.id} className="hover:bg-slate-50">
+                  <tr key={client.id} className="hover:bg-dark-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-blue-700 font-medium">
+                        <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                          <span className="text-primary-700 font-medium">
                             {client.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        <div className="font-medium text-slate-900">{client.name}</div>
+                        <div className="font-medium text-dark-900">{client.name}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-slate-900">{client.email}</div>
+                      <div className="text-sm text-dark-900">{client.email}</div>
                       {client.phone && (
-                        <div className="text-sm text-slate-500">{client.phone}</div>
+                        <div className="text-sm text-dark-500">{client.phone}</div>
                       )}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         projectCount > 0 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-slate-100 text-slate-600'
+                          ? 'bg-primary-100 text-primary-800' 
+                          : 'bg-dark-100 text-dark-600'
                       }`}>
                         {projectCount} {projectCount === 1 ? 'Projekt' : 'Projekte'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
+                    <td className="px-6 py-4 text-sm text-dark-500">
                       {format(parseISO(client.createdAt), 'd. MMM yyyy', { locale: de })}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => setEditingClient(client)}
-                          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                          className="p-2 text-dark-400 hover:text-dark-600 hover:bg-dark-100 rounded-lg transition-colors"
                           title="Bearbeiten"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -319,7 +319,7 @@ export default function ClientList() {
                         </button>
                         <button
                           onClick={() => setDeletingClient(client)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-dark-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Löschen"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

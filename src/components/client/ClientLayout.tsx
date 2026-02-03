@@ -17,20 +17,19 @@ export default function ClientLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-dark-50 to-primary-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-slate-200">
+      <header className="bg-white shadow-sm border-b border-dark-200">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="font-bold text-slate-900">Client Portal</h1>
-                <p className="text-xs text-slate-500">Ihr Projektfortschritt</p>
+              <img 
+                src="/digi_logo.png" 
+                alt="Digitalisierungshilfe" 
+                className="h-10"
+              />
+              <div className="hidden sm:block">
+                <p className="text-xs text-dark-500">Dein Projektfortschritt</p>
               </div>
             </div>
 
@@ -43,8 +42,8 @@ export default function ClientLayout() {
                     to={item.path}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'text-slate-600 hover:bg-slate-100'
+                        ? 'bg-primary-100 text-primary-700'
+                        : 'text-dark-600 hover:bg-dark-100'
                     }`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,16 +54,16 @@ export default function ClientLayout() {
                 );
               })}
 
-              <div className="w-px h-6 bg-slate-200 mx-2" />
+              <div className="w-px h-6 bg-dark-200 mx-2" />
 
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium text-slate-900">{state.currentUser?.name}</p>
-                  <p className="text-xs text-slate-500">{state.currentUser?.email}</p>
+                  <p className="text-sm font-medium text-dark-900">{state.currentUser?.name}</p>
+                  <p className="text-xs text-dark-500">{state.currentUser?.email}</p>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="p-2 text-dark-400 hover:text-dark-600 hover:bg-dark-100 rounded-lg transition-colors"
                   title="Abmelden"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,4 +1,4 @@
-import { AppState, User, Client } from '../types/index';
+import { AppState, User, Client, Employee } from '../types/index';
 
 // ============================================
 // INITIALE DEMO-DATEN für den Prototyp
@@ -41,19 +41,60 @@ const demoClient: Client = {
   name: 'Julia Weber',
   email: 'julia@techvision.de',
   phone: '+49 171 9876543',
+  assignedEmployeeId: 'employee-1',
   createdAt: new Date().toISOString()
 };
+
+// Demo-Mitarbeiter
+const demoEmployees: Employee[] = [
+  {
+    id: 'employee-1',
+    name: 'Nils Berger',
+    email: 'nils@digitalisierungshilfe.at',
+    phone: '+43 660 1234567',
+    role: 'Projektmanager',
+    calendlyUrl: 'https://calendly.com/nils-digitalisierungshilfe',
+    color: '#0d9488',  // Primary teal
+    isActive: true,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'employee-2',
+    name: 'Sarah Klein',
+    email: 'sarah@digitalisierungshilfe.at',
+    phone: '+43 660 7654321',
+    role: 'Projektmanagerin',
+    calendlyUrl: 'https://calendly.com/sarah-digitalisierungshilfe',
+    color: '#7c3aed',  // Purple
+    isActive: true,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'employee-3',
+    name: 'Max Weber',
+    email: 'max@digitalisierungshilfe.at',
+    phone: '+43 660 9876543',
+    role: 'Designer',
+    calendlyUrl: 'https://calendly.com/max-digitalisierungshilfe',
+    color: '#f59e0b',  // Amber
+    isActive: true,
+    createdAt: new Date().toISOString()
+  }
+];
 
 // Initialer App-Zustand
 export const initialAppState: AppState = {
   currentUser: null,
   users: [adminUser, clientUser],
   clients: [demoClient],
+  employees: demoEmployees,
   projects: [],
   milestones: [],
   infrastructureTasks: [],
+  projectFiles: [],
   activityLog: [],
-  escalationTrackers: []
+  escalationTrackers: [],
+  customTemplates: []
 };
 
 // Storage Keys
