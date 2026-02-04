@@ -352,8 +352,170 @@ function ProjectCompleted({ project }: { project: Project }) {
   );
 }
 
+// Vollständige Timeline-Übersicht
+function FullTimeline({ milestones, currentMilestoneId }: { milestones: Milestone[]; currentMilestoneId: string | null }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-dark-200 p-6">
+      <h3 className="font-semibold text-dark-900 mb-4">Alle Projektschritte</h3>
+      <div className="space-y-3">
+        {milestones.map((milestone, index) => {
+          const isCurrent = milestone.id === currentMilestoneId;
+          const isDone = milestone.status === 'done';
+          const isLocked = milestone.status === 'locked';
+          const dueDate = parseISO(milestone.dueDate);
+          const isOverdue = !isDone && differenceInDays(new Date(), dueDate) > 0;
+          
+          return (
+            <div 
+              key={milestone.id} 
+              className={`flex items-start gap-4 p-4 rounded-xl transition-all ${
+                isCurrent 
+                  ? 'bg-primary-50 border border-primary-200' 
+                  : isDone
+                  ? 'bg-dark-50'
+                  : 'bg-white border border-dark-100'
+              }`}
+            >
+              {/* Status Icon */}
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                isDone
+                  ? 'bg-primary-500 text-white'
+                  : isCurrent
+                  ? 'bg-primary-500 text-white'
+                  : isLocked
+                  ? 'bg-dark-200 text-dark-400'
+                  : 'bg-dark-300 text-dark-500'
+              }`}>
+                {isDone ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : isLocked ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                ) : (
+                  <span className="text-sm font-semibold">{index + 1}</span>
+                )}
+              </div>
+              
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className={`font-medium ${
+                      isDone ? 'text-dark-600' : isCurrent ? 'text-primary-900' : isLocked ? 'text-dark-400' : 'text-dark-700'
+                    }`}>
+                      {milestone.title}
+                    </p>
+                    <p className={`text-sm mt-0.5 ${
+                      isDone ? 'text-dark-400' : isCurrent ? 'text-primary-600' : 'text-dark-400'
+                    }`}>
+                      {milestone.owner === 'client' ? 'Ihre Aufgabe' : 'Digitalisierungshilfe'}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className={`text-sm font-medium ${
+                      isDone ? 'text-primary-600' : isOverdue ? 'text-red-600' : 'text-dark-600'
+                    }`}>
+                      {format(dueDate, 'd. MMM yyyy', { locale: de })}
+                    </p>
+                    {isDone && milestone.completedAt && (
+                      <p className="text-xs text-dark-400">
+                        Erledigt am {format(parseISO(milestone.completedAt), 'd. MMM', { locale: de })}
+                      </p>
+                    )}
+                    {isCurrent && (
+                      <span className="inline-block mt-1 px-2 py-0.5 bg-primary-100 text-primary-700 text-xs rounded-full">
+                        Aktuell
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Kunden-Uploads Bereich
+function ClientUploads({ projectId }: { projectId: string }) {
+  const { getFilesByProjectId, addProjectFile } = useApp();
+  const files = getFilesByProjectId(projectId).filter(f => f.uploadedBy === 'client');
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files;
+    if (!fileList) return;
+    
+    Array.from(fileList).forEach(file => {
+      addProjectFile({
+        projectId,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        uploadedBy: 'client',
+        url: URL.createObjectURL(file)
+      });
+    });
+    
+    e.target.value = '';
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-dark-200 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold text-dark-900">Meine Uploads</h3>
+        <label className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-lg text-sm font-medium cursor-pointer transition-colors">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Hochladen
+          <input
+            type="file"
+            multiple
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+        </label>
+      </div>
+      
+      {files.length === 0 ? (
+        <div className="text-center py-8 border-2 border-dashed border-dark-200 rounded-xl">
+          <svg className="w-10 h-10 text-dark-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          <p className="text-dark-500 text-sm">Noch keine Dateien hochgeladen</p>
+          <p className="text-dark-400 text-xs mt-1">Laden Sie hier Ihre Projektdateien hoch</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {files.map((file) => (
+            <div key={file.id} className="flex items-center gap-3 p-3 bg-dark-50 rounded-lg">
+              <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-dark-900 truncate">{file.name}</p>
+                <p className="text-xs text-dark-500">
+                  {(file.size / 1024).toFixed(1)} KB • {format(parseISO(file.uploadedAt), 'd. MMM yyyy', { locale: de })}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ClientDashboard() {
   const { state, getProjectsByClientId, getMilestonesByProjectId, submitMilestone } = useApp();
+  const [showFullTimeline, setShowFullTimeline] = useState(false);
 
   const clientId = state.currentUser?.clientId;
   const projects = clientId ? getProjectsByClientId(clientId) : [];
@@ -451,12 +613,29 @@ export default function ClientDashboard() {
             {/* Ansprechpartner */}
             <ContactCard employeeId={project.leadEmployeeId} />
 
-            {/* Bereits erledigt */}
-            <SuccessChecklist milestones={milestones} />
-
-            {/* Nächste Schritte */}
-            <UpcomingSteps milestones={milestones} currentMilestoneId={currentMilestone?.id || null} />
+            {/* Meine Uploads */}
+            <ClientUploads projectId={project.id} />
           </div>
+
+          {/* Timeline Toggle Button */}
+          <div className="lg:col-span-3">
+            <button
+              onClick={() => setShowFullTimeline(!showFullTimeline)}
+              className="w-full flex items-center justify-center gap-2 py-3 bg-white hover:bg-dark-50 border border-dark-200 rounded-xl text-dark-600 font-medium transition-colors"
+            >
+              <svg className={`w-5 h-5 transition-transform ${showFullTimeline ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+              {showFullTimeline ? 'Timeline ausblenden' : 'Alle Projektschritte anzeigen'}
+            </button>
+          </div>
+
+          {/* Full Timeline */}
+          {showFullTimeline && (
+            <div className="lg:col-span-3">
+              <FullTimeline milestones={milestones} currentMilestoneId={currentMilestone?.id || null} />
+            </div>
+          )}
         </div>
       )}
     </div>

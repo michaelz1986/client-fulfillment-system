@@ -15,6 +15,7 @@ import EmployeeList from './components/admin/EmployeeList';
 import ClientLayout from './components/client/ClientLayout';
 import ClientDashboard from './components/client/ClientDashboard';
 import ClientSettings from './components/client/ClientSettings';
+import ClientDocuments from './components/client/ClientDocuments';
 
 function App() {
   return (
@@ -55,6 +56,7 @@ function App() {
             }
           >
             <Route index element={<ClientDashboard />} />
+            <Route path="documents" element={<ClientDocuments />} />
             <Route path="settings" element={<ClientSettings />} />
           </Route>
 
