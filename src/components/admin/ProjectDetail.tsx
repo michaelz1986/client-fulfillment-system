@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { format, parseISO, differenceInDays, addDays } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useApp } from '../../context/AppContext';
-import { Milestone, MilestoneStatus, InfrastructureTask, MilestoneOwner, MilestoneCategory, ProjectDocumentType } from '../../types/index';
+import { Milestone, MilestoneStatus, InfrastructureTask, MilestoneOwner, MilestoneCategory, ProjectDocumentType, FileCategory } from '../../types/index';
 
 // Status options
 const statusOptions: { value: MilestoneStatus; label: string; color: string }[] = [
@@ -479,7 +479,7 @@ export default function ProjectDetail() {
     });
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, category: FileCategory = 'other') => {
     const files = e.target.files;
     if (!files || !project) return;
     
@@ -487,6 +487,7 @@ export default function ProjectDetail() {
       // Simulierter Upload - in Produktion würde hier der echte Upload stattfinden
       addProjectFile({
         projectId: project.id,
+        category,
         name: file.name,
         size: file.size,
         type: file.type,
@@ -984,7 +985,7 @@ export default function ProjectDetail() {
               <input
                 type="file"
                 multiple
-                onChange={handleFileUpload}
+                onChange={(e) => handleFileUpload(e, 'other')}
                 className="hidden"
               />
             </label>

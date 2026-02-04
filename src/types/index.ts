@@ -45,11 +45,15 @@ export interface Client {
   createdAt: string;
 }
 
+// Datei-Upload Kategorien
+export type FileCategory = 'corporate_identity' | 'photos' | 'documents' | 'other';
+
 // Datei-Upload
 export interface ProjectFile {
   id: string;
   projectId: string;
   milestoneId?: string;
+  category: FileCategory;  // Kategorie für bessere Organisation
   name: string;
   size: number;
   type: string;

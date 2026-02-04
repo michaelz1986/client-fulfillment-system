@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useApp } from '../../context/AppContext';
-import { Milestone, Project } from '../../types/index';
+import { Milestone, Project, FileCategory } from '../../types/index';
 
 // Beruhigende Nachrichten basierend auf Fortschritt
 const getEncouragingMessage = (progress: number, remainingSteps: number): string => {
@@ -441,10 +441,67 @@ function FullTimeline({ milestones, currentMilestoneId }: { milestones: Mileston
   );
 }
 
-// Kunden-Uploads Bereich
+// File Categories Configuration
+const FILE_CATEGORIES: { value: FileCategory; label: string; icon: string; color: string; description: string }[] = [
+  { 
+    value: 'corporate_identity', 
+    label: 'Corporate Identity & Logos', 
+    icon: '🎨',
+    color: 'purple',
+    description: 'Logo, Farben, Schriften, Styleguides'
+  },
+  { 
+    value: 'photos', 
+    label: 'Fotos & Bilder', 
+    icon: '📸',
+    color: 'blue',
+    description: 'Produktfotos, Team, Bildmaterial'
+  },
+  { 
+    value: 'documents', 
+    label: 'Dokumente & Texte', 
+    icon: '📄',
+    color: 'amber',
+    description: 'Texte, PDFs, Word-Dokumente'
+  },
+  { 
+    value: 'other', 
+    label: 'Sonstige Dateien', 
+    icon: '📁',
+    color: 'slate',
+    description: 'Alle anderen Dateien'
+  }
+];
+
+const getCategoryConfig = (category: FileCategory) => {
+  return FILE_CATEGORIES.find(c => c.value === category) || FILE_CATEGORIES[3];
+};
+
+const getCategoryColorClasses = (color: string) => {
+  const colors: Record<string, { bg: string; text: string; border: string; light: string }> = {
+    purple: { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200', light: 'bg-purple-50' },
+    blue: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200', light: 'bg-blue-50' },
+    amber: { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-200', light: 'bg-amber-50' },
+    slate: { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-200', light: 'bg-slate-50' }
+  };
+  return colors[color] || colors.slate;
+};
+
+// Kunden-Uploads Bereich mit Kategorien
 function ClientUploads({ projectId }: { projectId: string }) {
   const { getFilesByProjectId, addProjectFile } = useApp();
-  const files = getFilesByProjectId(projectId).filter(f => f.uploadedBy === 'client');
+  const [selectedCategory, setSelectedCategory] = useState<FileCategory | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadCategory, setUploadCategory] = useState<FileCategory>('corporate_identity');
+  
+  const allFiles = getFilesByProjectId(projectId).filter(f => f.uploadedBy === 'client');
+  
+  // Dateien nach Kategorien gruppieren
+  const filesByCategory = FILE_CATEGORIES.map(cat => ({
+    ...cat,
+    files: allFiles.filter(f => f.category === cat.value),
+    colors: getCategoryColorClasses(cat.color)
+  }));
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = e.target.files;
@@ -453,6 +510,7 @@ function ClientUploads({ projectId }: { projectId: string }) {
     Array.from(fileList).forEach(file => {
       addProjectFile({
         projectId,
+        category: uploadCategory,
         name: file.name,
         size: file.size,
         type: file.type,
@@ -462,27 +520,88 @@ function ClientUploads({ projectId }: { projectId: string }) {
     });
     
     e.target.value = '';
+    setShowUploadModal(false);
   };
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-dark-200 p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-dark-900">Meine Uploads</h3>
-        <label className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-lg text-sm font-medium cursor-pointer transition-colors">
+        <button 
+          onClick={() => setShowUploadModal(true)}
+          className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-lg text-sm font-medium transition-colors"
+        >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           Hochladen
-          <input
-            type="file"
-            multiple
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-        </label>
+        </button>
       </div>
+
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-semibold text-dark-900">Dateien hochladen</h4>
+              <button 
+                onClick={() => setShowUploadModal(false)}
+                className="text-dark-400 hover:text-dark-600"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <p className="text-sm text-dark-600 mb-4">Wählen Sie die Kategorie für Ihre Dateien:</p>
+            
+            <div className="space-y-2 mb-6">
+              {FILE_CATEGORIES.map(cat => {
+                const colors = getCategoryColorClasses(cat.color);
+                return (
+                  <button
+                    key={cat.value}
+                    onClick={() => setUploadCategory(cat.value)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                      uploadCategory === cat.value 
+                        ? `${colors.border} ${colors.light}` 
+                        : 'border-dark-100 hover:border-dark-200'
+                    }`}
+                  >
+                    <span className="text-2xl">{cat.icon}</span>
+                    <div className="flex-1">
+                      <p className="font-medium text-dark-900">{cat.label}</p>
+                      <p className="text-xs text-dark-500">{cat.description}</p>
+                    </div>
+                    {uploadCategory === cat.value && (
+                      <svg className={`w-5 h-5 ${colors.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <label className="flex flex-col items-center justify-center gap-3 p-6 border-2 border-dashed border-primary-300 rounded-xl bg-primary-50 cursor-pointer hover:bg-primary-100 transition-colors">
+              <svg className="w-8 h-8 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <span className="text-primary-700 font-medium">Dateien auswählen</span>
+              <span className="text-xs text-primary-500">oder per Drag & Drop</span>
+              <input
+                type="file"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </label>
+          </div>
+        </div>
+      )}
       
-      {files.length === 0 ? (
+      {allFiles.length === 0 ? (
         <div className="text-center py-8 border-2 border-dashed border-dark-200 rounded-xl">
           <svg className="w-10 h-10 text-dark-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -490,23 +609,83 @@ function ClientUploads({ projectId }: { projectId: string }) {
           <p className="text-dark-500 text-sm">Noch keine Dateien hochgeladen</p>
           <p className="text-dark-400 text-xs mt-1">Laden Sie hier Ihre Projektdateien hoch</p>
         </div>
-      ) : (
+      ) : selectedCategory === null ? (
+        // Kategorien-Übersicht
         <div className="space-y-2">
-          {files.map((file) => (
-            <div key={file.id} className="flex items-center gap-3 p-3 bg-dark-50 rounded-lg">
-              <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
+          {filesByCategory.map((cat) => (
+            <button
+              key={cat.value}
+              onClick={() => cat.files.length > 0 && setSelectedCategory(cat.value)}
+              disabled={cat.files.length === 0}
+              className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${
+                cat.files.length > 0 
+                  ? `${cat.colors.light} hover:${cat.colors.bg} border ${cat.colors.border}` 
+                  : 'bg-dark-50 border border-dark-100 opacity-50 cursor-not-allowed'
+              }`}
+            >
+              <span className="text-xl">{cat.icon}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-dark-900 truncate">{file.name}</p>
-                <p className="text-xs text-dark-500">
-                  {(file.size / 1024).toFixed(1)} KB • {format(parseISO(file.uploadedAt), 'd. MMM yyyy', { locale: de })}
+                <p className={`font-medium text-sm ${cat.files.length > 0 ? 'text-dark-900' : 'text-dark-400'}`}>
+                  {cat.label}
                 </p>
               </div>
-            </div>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                cat.files.length > 0 ? `${cat.colors.bg} ${cat.colors.text}` : 'bg-dark-200 text-dark-400'
+              }`}>
+                {cat.files.length}
+              </span>
+              {cat.files.length > 0 && (
+                <svg className="w-4 h-4 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              )}
+            </button>
           ))}
+        </div>
+      ) : (
+        // Dateien in Kategorie
+        <div>
+          <button 
+            onClick={() => setSelectedCategory(null)}
+            className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700 mb-3"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Zurück zur Übersicht
+          </button>
+          
+          {(() => {
+            const catConfig = getCategoryConfig(selectedCategory);
+            const colors = getCategoryColorClasses(catConfig.color);
+            const files = allFiles.filter(f => f.category === selectedCategory);
+            
+            return (
+              <>
+                <div className={`flex items-center gap-2 mb-3 p-2 rounded-lg ${colors.light}`}>
+                  <span className="text-lg">{catConfig.icon}</span>
+                  <span className={`font-medium text-sm ${colors.text}`}>{catConfig.label}</span>
+                </div>
+                <div className="space-y-2">
+                  {files.map((file) => (
+                    <div key={file.id} className="flex items-center gap-3 p-3 bg-dark-50 rounded-lg">
+                      <div className={`w-10 h-10 ${colors.bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                        <svg className={`w-5 h-5 ${colors.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-dark-900 truncate">{file.name}</p>
+                        <p className="text-xs text-dark-500">
+                          {(file.size / 1024).toFixed(1)} KB • {format(parseISO(file.uploadedAt), 'd. MMM yyyy', { locale: de })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
         </div>
       )}
     </div>
