@@ -143,13 +143,103 @@ function DeleteConfirmModal({
   );
 }
 
+// Credentials Modal - Zeigt Zugangsdaten an
+function CredentialsModal({
+  client,
+  credentials,
+  onClose
+}: {
+  client: Client;
+  credentials: { email: string; password: string };
+  onClose: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    const text = `Zugangsdaten für ${client.name}\n\nPortal: ${window.location.origin}\nE-Mail: ${credentials.email}\nPasswort: ${credentials.password}`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+            <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-dark-900">Zugangsdaten erstellt</h3>
+            <p className="text-sm text-dark-500">{client.name}</p>
+          </div>
+        </div>
+        
+        <div className="bg-dark-50 rounded-lg p-4 mb-4 space-y-3">
+          <div>
+            <label className="block text-xs text-dark-500 uppercase tracking-wider mb-1">Portal</label>
+            <p className="text-sm font-mono text-dark-900">{window.location.origin}</p>
+          </div>
+          <div>
+            <label className="block text-xs text-dark-500 uppercase tracking-wider mb-1">E-Mail</label>
+            <p className="text-sm font-mono text-dark-900">{credentials.email}</p>
+          </div>
+          <div>
+            <label className="block text-xs text-dark-500 uppercase tracking-wider mb-1">Passwort</label>
+            <p className="text-sm font-mono text-dark-900 bg-amber-50 px-2 py-1 rounded">{credentials.password}</p>
+          </div>
+        </div>
+
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+          <p className="text-sm text-amber-800">
+            <strong>Wichtig:</strong> Speichern Sie diese Zugangsdaten oder senden Sie sie dem Kunden. 
+            Das Passwort kann nicht erneut angezeigt werden.
+          </p>
+        </div>
+        
+        <div className="flex gap-3">
+          <button
+            onClick={copyToClipboard}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-dark-100 hover:bg-dark-200 text-dark-700 rounded-lg transition-colors"
+          >
+            {copied ? (
+              <>
+                <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Kopiert!
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+                Kopieren
+              </>
+            )}
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+          >
+            Fertig
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ClientList() {
-  const { state, createClient, updateClient, deleteClient, getProjectsByClientId } = useApp();
+  const { state, createClient, updateClient, deleteClient, getProjectsByClientId, createClientUser, getUserByClientId } = useApp();
   
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [newCredentials, setNewCredentials] = useState<{ client: Client; email: string; password: string } | null>(null);
   
   // Filter clients
   const filteredClients = state.clients.filter(client =>
@@ -177,6 +267,11 @@ export default function ClientList() {
       deleteClient(deletingClient.id);
       setDeletingClient(null);
     }
+  };
+
+  const handleCreateCredentials = (client: Client) => {
+    const { password } = createClientUser(client.id, client.email, client.name);
+    setNewCredentials({ client, email: client.email, password });
   };
   
   return (
@@ -262,10 +357,10 @@ export default function ClientList() {
                   Kontakt
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
-                  Projekte
+                  Portal-Zugang
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
-                  Erstellt
+                  Projekte
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-dark-500 uppercase tracking-wider">
                   Aktionen
@@ -275,6 +370,7 @@ export default function ClientList() {
             <tbody className="divide-y divide-slate-200">
               {filteredClients.map((client) => {
                 const projectCount = getProjectsByClientId(client.id).length;
+                const clientUser = getUserByClientId(client.id);
                 
                 return (
                   <tr key={client.id} className="hover:bg-dark-50">
@@ -285,13 +381,47 @@ export default function ClientList() {
                             {client.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        <div className="font-medium text-dark-900">{client.name}</div>
+                        <div>
+                          <div className="font-medium text-dark-900">{client.name}</div>
+                          <div className="text-xs text-dark-400">
+                            Seit {format(parseISO(client.createdAt), 'd. MMM yyyy', { locale: de })}
+                          </div>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-dark-900">{client.email}</div>
                       {client.phone && (
                         <div className="text-sm text-dark-500">{client.phone}</div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {clientUser ? (
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-primary-500 rounded-full"></span>
+                            <span className="text-sm text-dark-700">Zugang aktiv</span>
+                          </div>
+                          {clientUser.lastLoginAt ? (
+                            <div className="text-xs text-dark-500 mt-1">
+                              Letzter Login: {format(parseISO(clientUser.lastLoginAt), 'd. MMM, HH:mm', { locale: de })}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-amber-600 mt-1">
+                              Noch nie eingeloggt
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleCreateCredentials(client)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                          </svg>
+                          Zugang erstellen
+                        </button>
                       )}
                     </td>
                     <td className="px-6 py-4">
@@ -302,9 +432,6 @@ export default function ClientList() {
                       }`}>
                         {projectCount} {projectCount === 1 ? 'Projekt' : 'Projekte'}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-dark-500">
-                      {format(parseISO(client.createdAt), 'd. MMM yyyy', { locale: de })}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -358,6 +485,14 @@ export default function ClientList() {
           projectCount={getProjectsByClientId(deletingClient.id).length}
           onConfirm={handleDeleteClient}
           onClose={() => setDeletingClient(null)}
+        />
+      )}
+
+      {newCredentials && (
+        <CredentialsModal
+          client={newCredentials.client}
+          credentials={{ email: newCredentials.email, password: newCredentials.password }}
+          onClose={() => setNewCredentials(null)}
         />
       )}
     </div>

@@ -14,7 +14,9 @@ import {
   NotificationPreferences,
   ProjectTemplate,
   Employee,
-  ProjectFile
+  ProjectFile,
+  ProjectDocument,
+  ProjectDocumentType
 } from '../types/index';
 import { loadState, saveState, initialAppState } from '../data/initialData';
 import { getTemplateByType, getAllTemplates } from '../data/templates';
@@ -52,6 +54,10 @@ type Action =
   | { type: 'DELETE_EMPLOYEE'; payload: string }
   | { type: 'ADD_PROJECT_FILE'; payload: ProjectFile }
   | { type: 'DELETE_PROJECT_FILE'; payload: string }
+  | { type: 'ADD_PROJECT_DOCUMENT'; payload: ProjectDocument }
+  | { type: 'DELETE_PROJECT_DOCUMENT'; payload: string }
+  | { type: 'CREATE_USER'; payload: User }
+  | { type: 'UPDATE_USER_LOGIN'; payload: string }
   | { type: 'RESET_STATE' }
   | { type: 'LOAD_STATE'; payload: AppState };
 
@@ -290,6 +296,32 @@ function appReducer(state: AppState, action: Action): AppState {
         projectFiles: (state.projectFiles || []).filter(f => f.id !== action.payload)
       };
 
+    case 'ADD_PROJECT_DOCUMENT':
+      return {
+        ...state,
+        projectDocuments: [...(state.projectDocuments || []), action.payload]
+      };
+
+    case 'DELETE_PROJECT_DOCUMENT':
+      return {
+        ...state,
+        projectDocuments: (state.projectDocuments || []).filter(d => d.id !== action.payload)
+      };
+
+    case 'CREATE_USER':
+      return {
+        ...state,
+        users: [...state.users, action.payload]
+      };
+
+    case 'UPDATE_USER_LOGIN':
+      return {
+        ...state,
+        users: state.users.map(u =>
+          u.id === action.payload ? { ...u, lastLoginAt: new Date().toISOString() } : u
+        )
+      };
+
     case 'RESET_STATE':
       return initialAppState;
 
@@ -298,7 +330,8 @@ function appReducer(state: AppState, action: Action): AppState {
         ...action.payload, 
         customTemplates: action.payload.customTemplates || [],
         employees: action.payload.employees || [],
-        projectFiles: action.payload.projectFiles || []
+        projectFiles: action.payload.projectFiles || [],
+        projectDocuments: action.payload.projectDocuments || []
       };
 
     default:
@@ -357,6 +390,13 @@ interface AppContextType {
   deleteProjectFile: (fileId: string) => void;
   getFilesByProjectId: (projectId: string) => ProjectFile[];
   getFilesByMilestoneId: (milestoneId: string) => ProjectFile[];
+  // Project Documents
+  addProjectDocument: (doc: Omit<ProjectDocument, 'id' | 'uploadedAt'>) => ProjectDocument;
+  deleteProjectDocument: (docId: string) => void;
+  getDocumentsByProjectId: (projectId: string) => ProjectDocument[];
+  // User Management
+  createClientUser: (clientId: string, email: string, name: string) => { user: User; password: string };
+  getUserByClientId: (clientId: string) => User | undefined;
   // User Preferences
   updateUserPreferences: (userId: string, preferences: NotificationPreferences, phone?: string) => void;
   // Utilities
@@ -385,7 +425,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const stateToSave = { ...state, currentUser: null };
       saveState(stateToSave);
     }
-  }, [state.clients, state.projects, state.milestones, state.infrastructureTasks, state.activityLog, state.users, state.customTemplates, state.employees, state.projectFiles, isInitialized]);
+  }, [state.clients, state.projects, state.milestones, state.infrastructureTasks, state.activityLog, state.users, state.customTemplates, state.employees, state.projectFiles, state.projectDocuments, isInitialized]);
 
   // ============================================
   // AUTH FUNCTIONS
@@ -396,7 +436,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
     );
     if (user) {
-      dispatch({ type: 'LOGIN', payload: user });
+      // Login-Zeit tracken
+      dispatch({ type: 'UPDATE_USER_LOGIN', payload: user.id });
+      dispatch({ type: 'LOGIN', payload: { ...user, lastLoginAt: new Date().toISOString() } });
       return user;
     }
     return null;
@@ -780,6 +822,62 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // ============================================
+  // PROJECT DOCUMENT FUNCTIONS
+  // ============================================
+
+  const addProjectDocument = (docData: Omit<ProjectDocument, 'id' | 'uploadedAt'>): ProjectDocument => {
+    const newDoc: ProjectDocument = {
+      ...docData,
+      id: `doc-${uuidv4()}`,
+      uploadedAt: new Date().toISOString()
+    };
+    dispatch({ type: 'ADD_PROJECT_DOCUMENT', payload: newDoc });
+    return newDoc;
+  };
+
+  const deleteProjectDocument = (docId: string) => {
+    dispatch({ type: 'DELETE_PROJECT_DOCUMENT', payload: docId });
+  };
+
+  const getDocumentsByProjectId = (projectId: string): ProjectDocument[] => {
+    return (state.projectDocuments || []).filter(d => d.projectId === projectId);
+  };
+
+  // ============================================
+  // USER MANAGEMENT FUNCTIONS
+  // ============================================
+
+  // Generiert ein zufälliges Passwort
+  const generatePassword = (): string => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 10; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
+  const createClientUser = (clientId: string, email: string, name: string): { user: User; password: string } => {
+    const password = generatePassword();
+    const newUser: User = {
+      id: `user-${uuidv4()}`,
+      email,
+      password,
+      role: 'client',
+      name,
+      notificationPreferences: { email: true, sms: false },
+      clientId,
+      createdAt: new Date().toISOString()
+    };
+    dispatch({ type: 'CREATE_USER', payload: newUser });
+    return { user: newUser, password };
+  };
+
+  const getUserByClientId = (clientId: string): User | undefined => {
+    return state.users.find(u => u.clientId === clientId);
+  };
+
+  // ============================================
   // USER PREFERENCES FUNCTIONS
   // ============================================
 
@@ -834,6 +932,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteProjectFile,
     getFilesByProjectId,
     getFilesByMilestoneId,
+    addProjectDocument,
+    deleteProjectDocument,
+    getDocumentsByProjectId,
+    createClientUser,
+    getUserByClientId,
     updateUserPreferences,
     resetState: resetAppState
   };

@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { format, parseISO, differenceInDays, addDays } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useApp } from '../../context/AppContext';
-import { Milestone, MilestoneStatus, InfrastructureTask, MilestoneOwner, MilestoneCategory } from '../../types/index';
+import { Milestone, MilestoneStatus, InfrastructureTask, MilestoneOwner, MilestoneCategory, ProjectDocumentType } from '../../types/index';
 
 // Status options
 const statusOptions: { value: MilestoneStatus; label: string; color: string }[] = [
@@ -395,6 +395,9 @@ export default function ProjectDetail() {
     deleteInfrastructureTask,
     addProjectFile,
     deleteProjectFile,
+    addProjectDocument,
+    deleteProjectDocument,
+    getDocumentsByProjectId,
     deleteActivityLog,
     deleteProject
   } = useApp();
@@ -404,10 +407,14 @@ export default function ProjectDetail() {
   const milestones = id ? getMilestonesByProjectId(id) : [];
   const infrastructureTasks = id ? getInfrastructureTasksByProjectId(id) : [];
   const projectFiles = id ? getFilesByProjectId(id) : [];
+  const projectDocuments = id ? getDocumentsByProjectId(id) : [];
   const employees = state.employees || [];
   
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAddMilestone, setShowAddMilestone] = useState(false);
+  const [showDocumentUpload, setShowDocumentUpload] = useState(false);
+  const [documentType, setDocumentType] = useState<ProjectDocumentType>('offer');
+  const [documentName, setDocumentName] = useState('');
   
   // New Milestone State
   const [newMilestone, setNewMilestone] = useState({
@@ -489,6 +496,33 @@ export default function ProjectDetail() {
     });
     
     e.target.value = '';  // Reset input
+  };
+
+  const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !project) return;
+    
+    addProjectDocument({
+      projectId: project.id,
+      type: documentType,
+      name: documentName || getDocumentTypeLabel(documentType),
+      fileName: file.name,
+      fileSize: file.size,
+      url: URL.createObjectURL(file)  // Nur für Demo
+    });
+    
+    setShowDocumentUpload(false);
+    setDocumentName('');
+    e.target.value = '';
+  };
+
+  const getDocumentTypeLabel = (type: ProjectDocumentType): string => {
+    switch (type) {
+      case 'offer': return 'Angebot';
+      case 'contract': return 'Vertrag';
+      case 'invoice': return 'Rechnung';
+      default: return 'Dokument';
+    }
   };
 
   const handleAddMilestone = () => {
@@ -814,9 +848,107 @@ export default function ProjectDetail() {
             </div>
           </div>
 
+          {/* Kunden-Dokumente (Angebot, Vertrag) */}
+          <div className="bg-white rounded-xl shadow-sm border border-dark-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-dark-900">Kunden-Dokumente</h2>
+              <button
+                onClick={() => setShowDocumentUpload(true)}
+                className="text-sm text-primary-600 hover:text-primary-700"
+              >
+                + Hinzufügen
+              </button>
+            </div>
+            <div className="space-y-2">
+              {projectDocuments.map((doc) => (
+                <div key={doc.id} className="flex items-center gap-3 p-3 bg-dark-50 rounded-lg group">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    doc.type === 'offer' ? 'bg-blue-100 text-blue-600' :
+                    doc.type === 'contract' ? 'bg-primary-100 text-primary-600' :
+                    doc.type === 'invoice' ? 'bg-amber-100 text-amber-600' :
+                    'bg-dark-100 text-dark-600'
+                  }`}>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-dark-900">{doc.name}</p>
+                    <p className="text-xs text-dark-500">{getDocumentTypeLabel(doc.type)} • {doc.fileName}</p>
+                  </div>
+                  <button
+                    onClick={() => deleteProjectDocument(doc.id)}
+                    className="p-1 text-dark-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              {projectDocuments.length === 0 && (
+                <p className="text-sm text-dark-500 text-center py-4">
+                  Noch keine Dokumente für den Kunden
+                </p>
+              )}
+            </div>
+
+            {/* Document Upload Modal */}
+            {showDocumentUpload && (
+              <div className="mt-4 p-4 border border-dark-200 rounded-lg bg-dark-50">
+                <h4 className="font-medium text-dark-900 mb-3">Dokument hochladen</h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm text-dark-600 mb-1">Dokumenttyp</label>
+                    <select
+                      value={documentType}
+                      onChange={(e) => setDocumentType(e.target.value as ProjectDocumentType)}
+                      className="w-full px-3 py-2 border border-dark-300 rounded-lg text-sm"
+                    >
+                      <option value="offer">Angebot</option>
+                      <option value="contract">Vertrag</option>
+                      <option value="invoice">Rechnung</option>
+                      <option value="other">Sonstiges</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-dark-600 mb-1">Bezeichnung (optional)</label>
+                    <input
+                      type="text"
+                      value={documentName}
+                      onChange={(e) => setDocumentName(e.target.value)}
+                      placeholder={getDocumentTypeLabel(documentType)}
+                      className="w-full px-3 py-2 border border-dark-300 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm cursor-pointer transition-colors">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      Datei wählen
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleDocumentUpload}
+                        className="hidden"
+                      />
+                    </label>
+                    <button
+                      onClick={() => { setShowDocumentUpload(false); setDocumentName(''); }}
+                      className="px-4 py-2 text-dark-600 hover:bg-dark-200 rounded-lg text-sm transition-colors"
+                    >
+                      Abbrechen
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Project Files */}
           <div className="bg-white rounded-xl shadow-sm border border-dark-200 p-6">
-            <h2 className="text-lg font-semibold text-dark-900 mb-4">Dateien</h2>
+            <h2 className="text-lg font-semibold text-dark-900 mb-4">Arbeitsdateien</h2>
             <div className="space-y-2 mb-4">
               {projectFiles.map((file) => (
                 <div key={file.id} className="flex items-center gap-3 p-2 bg-dark-50 rounded-lg group">
@@ -827,7 +959,7 @@ export default function ProjectDetail() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-dark-900 truncate">{file.name}</p>
-                    <p className="text-xs text-dark-500">{(file.size / 1024).toFixed(1)} KB</p>
+                    <p className="text-xs text-dark-500">{(file.size / 1024).toFixed(1)} KB • {file.uploadedBy === 'client' ? 'Kunde' : 'Agentur'}</p>
                   </div>
                   <button
                     onClick={() => deleteProjectFile(file.id)}

@@ -1,18 +1,10 @@
 import { format, parseISO } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useApp } from '../../context/AppContext';
+import { ProjectDocumentType } from '../../types/index';
 
-// Dokument-Typen
-type DocumentType = 'offer' | 'contract' | 'agb' | 'invoice' | 'other';
-
-interface ClientDocument {
-  id: string;
-  type: DocumentType;
-  name: string;
-  description?: string;
-  url: string;
-  uploadedAt: string;
-}
+// Dokument-Typen für UI
+type DocumentType = ProjectDocumentType | 'agb';
 
 // Demo-Dokumente (In Produktion würden diese aus der DB kommen)
 const getDocumentIcon = (type: DocumentType) => {
@@ -70,7 +62,7 @@ const getDocumentTypeColor = (type: DocumentType) => {
   }
 };
 
-function DocumentCard({ document }: { document: ClientDocument }) {
+function DocumentCard({ document }: { document: DisplayDocument }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-dark-200 p-6 hover:shadow-md transition-shadow">
       <div className="flex items-start gap-4">
@@ -111,26 +103,46 @@ function DocumentCard({ document }: { document: ClientDocument }) {
   );
 }
 
+interface DisplayDocument {
+  id: string;
+  type: DocumentType;
+  name: string;
+  description?: string;
+  url: string;
+  uploadedAt: string;
+}
+
 export default function ClientDocuments() {
-  const { state, getProjectsByClientId } = useApp();
+  const { state, getProjectsByClientId, getDocumentsByProjectId } = useApp();
 
   const clientId = state.currentUser?.clientId;
   const projects = clientId ? getProjectsByClientId(clientId) : [];
   const project = projects[0];
 
-  // Demo-Dokumente - In Produktion würden diese aus dem State kommen
-  const documents: ClientDocument[] = [
+  // Echte Projekt-Dokumente aus dem State
+  const projectDocs = project ? getDocumentsByProjectId(project.id) : [];
+  
+  // Konvertiere zu Display-Format und füge AGB hinzu
+  const documents: DisplayDocument[] = [
+    // Projekt-Dokumente
+    ...projectDocs.map(doc => ({
+      id: doc.id,
+      type: doc.type as DocumentType,
+      name: doc.name,
+      description: doc.type === 'offer' 
+        ? 'Detaillierte Aufstellung aller Leistungen und Kosten für Ihr Projekt.'
+        : doc.type === 'contract'
+        ? 'Ihr Vertrag mit uns.'
+        : doc.type === 'invoice'
+        ? 'Ihre Rechnung.'
+        : undefined,
+      url: doc.url,
+      uploadedAt: doc.uploadedAt
+    })),
+    // AGB immer anzeigen
     {
-      id: 'doc-1',
-      type: 'offer',
-      name: project ? `Angebot - ${project.title}` : 'Ihr Angebot',
-      description: 'Detaillierte Aufstellung aller Leistungen und Kosten für Ihr Projekt.',
-      url: '#',
-      uploadedAt: new Date().toISOString()
-    },
-    {
-      id: 'doc-2',
-      type: 'agb',
+      id: 'agb-static',
+      type: 'agb' as DocumentType,
       name: 'Allgemeine Geschäftsbedingungen',
       description: 'Unsere aktuellen AGB für die Zusammenarbeit.',
       url: 'https://www.digitalisierungshilfe.at/agb',

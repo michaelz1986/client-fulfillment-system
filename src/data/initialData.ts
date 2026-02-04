@@ -92,6 +92,7 @@ export const initialAppState: AppState = {
   milestones: [],
   infrastructureTasks: [],
   projectFiles: [],
+  projectDocuments: [],
   activityLog: [],
   escalationTrackers: [],
   customTemplates: []

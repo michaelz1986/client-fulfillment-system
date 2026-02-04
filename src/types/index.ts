@@ -17,6 +17,7 @@ export interface User {
   phone?: string;
   notificationPreferences: NotificationPreferences;
   clientId?: string;
+  lastLoginAt?: string;  // Letzter Login
   createdAt: string;
 }
 
@@ -55,6 +56,21 @@ export interface ProjectFile {
   uploadedBy: 'client' | 'agency';
   uploadedAt: string;
   url: string;  // Simuliert - in Produktion wäre das ein echter Storage-Link
+}
+
+// Projekt-Dokumente (Angebote, Verträge, etc.)
+export type ProjectDocumentType = 'offer' | 'contract' | 'invoice' | 'other';
+
+export interface ProjectDocument {
+  id: string;
+  projectId: string;
+  type: ProjectDocumentType;
+  name: string;
+  description?: string;
+  fileName: string;
+  fileSize: number;
+  url: string;
+  uploadedAt: string;
 }
 
 // Projekttypen
@@ -185,6 +201,7 @@ export interface AppState {
   milestones: Milestone[];
   infrastructureTasks: InfrastructureTask[];
   projectFiles: ProjectFile[];  // Hochgeladene Dateien
+  projectDocuments: ProjectDocument[];  // Angebote, Verträge etc.
   activityLog: ActivityLogEntry[];
   escalationTrackers: EscalationTracker[];
   customTemplates: ProjectTemplate[];  // Benutzerdefinierte Produkt-Templates
