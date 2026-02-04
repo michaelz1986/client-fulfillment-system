@@ -28,9 +28,6 @@ export default function ClientLayout() {
                 alt="Digitalisierungshilfe" 
                 className="h-10"
               />
-              <div className="hidden sm:block">
-                <p className="text-xs text-dark-500">Dein Projektfortschritt</p>
-              </div>
             </div>
 
             <nav className="flex items-center gap-1">

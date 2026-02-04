@@ -23,11 +23,11 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-dark-100">
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 w-64 bg-dark-900 text-white">
-        <div className="flex items-center gap-3 p-6 border-b border-dark-700">
+        <div className="flex items-center justify-center p-6 border-b border-dark-700">
           <img 
-            src="/digi_logo.png" 
+            src="/digi_logo_white.png" 
             alt="Digitalisierungshilfe" 
-            className="h-10"
+            className="h-12"
           />
         </div>
 

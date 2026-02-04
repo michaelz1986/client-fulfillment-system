@@ -31,9 +31,9 @@ export default function Login() {
         {/* Logo/Header */}
         <div className="text-center mb-8">
           <img 
-            src="/digi_logo.png" 
+            src="/digi_logo_white.png" 
             alt="Digitalisierungshilfe" 
-            className="h-16 mx-auto mb-4"
+            className="h-20 mx-auto mb-6"
           />
           <h1 className="text-3xl font-bold text-white">Kunden-Portal</h1>
           <p className="text-primary-300 mt-2">Dein Projekt. Dein Fortschritt. Volle Transparenz.</p>
