@@ -96,7 +96,7 @@ export type MilestoneStatus = 'locked' | 'open' | 'submitted' | 'in_review' | 'd
 export type MilestoneOwner = 'agency' | 'client';
 
 // Meilenstein-Kategorie
-export type MilestoneCategory = 'onboarding' | 'content' | 'design' | 'development' | 'review' | 'deployment';
+export type MilestoneCategory = 'onboarding' | 'content' | 'design' | 'development' | 'review' | 'conversion' | 'deployment';
 
 // Meilenstein-Container
 export interface Milestone {

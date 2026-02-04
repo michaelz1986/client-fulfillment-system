@@ -668,6 +668,7 @@ export default function ProjectDetail() {
                     <option value="design">Design</option>
                     <option value="development">Entwicklung</option>
                     <option value="review">Review</option>
+                    <option value="conversion">Conversion-Prüfung</option>
                     <option value="deployment">Deployment</option>
                   </select>
                 </div>

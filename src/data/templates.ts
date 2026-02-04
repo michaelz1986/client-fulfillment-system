@@ -80,6 +80,15 @@ export const defaultTemplates: ProjectTemplate[] = [
       {
         id: 'ms-7',
         order: 7,
+        title: 'Customer Journey Prüfung',
+        description: 'Unser Marketing-Experte prüft die komplette Customer Journey Ihrer Landingpage auf Conversion-Optimierung. Wir stellen sicher, dass Ihre Seite optimal konvertiert.',
+        owner: 'agency',
+        category: 'conversion',
+        daysOffset: 2
+      },
+      {
+        id: 'ms-8',
+        order: 8,
         title: 'Go-Live & Übergabe',
         description: 'Ihre Landingpage geht live! Wir übergeben Ihnen alle Zugangsdaten und Dokumentationen.',
         owner: 'agency',
@@ -91,7 +100,8 @@ export const defaultTemplates: ProjectTemplate[] = [
       'Domain gekauft',
       'Hosting konfiguriert',
       'SSL-Zertifikat aktiv',
-      'Analytics eingerichtet'
+      'Analytics eingerichtet',
+      'Conversion Tracking eingerichtet'
     ])
   },
 
@@ -176,12 +186,30 @@ export const defaultTemplates: ProjectTemplate[] = [
       {
         id: 'ms-8',
         order: 8,
-        title: 'Finale Abnahme & Go-Live',
-        description: 'Testen Sie die fertige Website und geben Sie die finale Freigabe für den Launch.',
+        title: 'Finale Abnahme',
+        description: 'Testen Sie die fertige Website und geben Sie die finale Freigabe.',
         owner: 'client',
-        category: 'deployment',
+        category: 'review',
         daysOffset: 5,
         actionLabel: 'Staging-Seite ansehen'
+      },
+      {
+        id: 'ms-9',
+        order: 9,
+        title: 'Customer Journey Prüfung',
+        description: 'Unser Marketing-Experte analysiert die komplette User Experience und Customer Journey. Wir optimieren die Conversion-Rate und stellen sicher, dass Besucher zu Kunden werden.',
+        owner: 'agency',
+        category: 'conversion',
+        daysOffset: 3
+      },
+      {
+        id: 'ms-10',
+        order: 10,
+        title: 'Go-Live & Übergabe',
+        description: 'Ihre Website geht live! Wir führen den finalen Launch durch und übergeben alle Zugangsdaten.',
+        owner: 'agency',
+        category: 'deployment',
+        daysOffset: 0
       }
     ],
     infrastructureTasks: toInfrastructure([
@@ -190,6 +218,7 @@ export const defaultTemplates: ProjectTemplate[] = [
       'SSL-Zertifikat aktiv',
       'E-Mail-Konten eingerichtet',
       'Analytics eingerichtet',
+      'Conversion Tracking eingerichtet',
       'Backup-System konfiguriert'
     ])
   },

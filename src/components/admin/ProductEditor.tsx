@@ -11,6 +11,7 @@ const CATEGORIES: { value: MilestoneCategory; label: string }[] = [
   { value: 'design', label: 'Design' },
   { value: 'development', label: 'Entwicklung' },
   { value: 'review', label: 'Review' },
+  { value: 'conversion', label: 'Conversion-Prüfung' },
   { value: 'deployment', label: 'Deployment' }
 ];
 

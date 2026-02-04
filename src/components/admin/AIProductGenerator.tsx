@@ -11,7 +11,7 @@ interface AIGeneratedProduct {
     title: string;
     description: string;
     owner: 'agency' | 'client';
-    category: 'onboarding' | 'content' | 'design' | 'development' | 'review' | 'deployment';
+    category: 'onboarding' | 'content' | 'design' | 'development' | 'review' | 'conversion' | 'deployment';
     daysOffset: number;
   }[];
   infrastructureTasks: string[];
@@ -52,7 +52,7 @@ Antworte NUR mit einem validen JSON-Objekt (ohne Markdown-Codeblöcke) im folgen
       "title": "Meilenstein-Titel",
       "description": "Was wird hier gemacht? (für den Kunden verständlich)",
       "owner": "agency" oder "client",
-      "category": "onboarding", "content", "design", "development", "review" oder "deployment",
+      "category": "onboarding", "content", "design", "development", "review", "conversion" oder "deployment",
       "daysOffset": Anzahl Tage nach dem vorherigen Meilenstein
     }
   ],
@@ -65,7 +65,8 @@ Regeln:
 - daysOffset ist die Zeit NACH dem vorherigen Meilenstein (erster = 0)
 - Infrastruktur-Tasks sind technische Voraussetzungen (Domain, Hosting, etc.)
 - Beschreibungen sollen kundenfreundlich und verständlich sein
-- Kategorien sinnvoll wählen basierend auf der Aufgabe`;
+- Kategorien sinnvoll wählen basierend auf der Aufgabe
+- WICHTIG: Füge vor dem finalen Go-Live IMMER einen Meilenstein "Customer Journey Prüfung" mit category "conversion" hinzu (owner: agency). In diesem Schritt prüft unser Marketing-Experte die Conversion-Optimierung.`;
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
