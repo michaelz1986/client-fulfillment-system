@@ -416,6 +416,17 @@ export default function ProjectDetail() {
   const [documentType, setDocumentType] = useState<ProjectDocumentType>('offer');
   const [documentName, setDocumentName] = useState('');
   
+  // Quick Event/Call Modal State
+  const [showQuickEvent, setShowQuickEvent] = useState(false);
+  const [quickEventData, setQuickEventData] = useState({
+    title: 'Termin vereinbaren',
+    description: 'Bitte buchen Sie über den folgenden Link einen passenden Termin für unser nächstes Gespräch.',
+    employeeId: '' as string,
+    customCalendlyUrl: '',
+    useEmployeeCalendly: true,
+    insertAfterMilestoneId: '' as string,
+  });
+  
   // New Milestone State
   const [newMilestone, setNewMilestone] = useState({
     title: '',
@@ -567,6 +578,70 @@ export default function ProjectDetail() {
       deleteMilestone(milestoneId);
     }
   };
+
+  // Quick Event/Call hinzufügen
+  const handleAddQuickEvent = () => {
+    if (!project) return;
+    
+    // Calendly URL bestimmen
+    let calendlyUrl = quickEventData.customCalendlyUrl;
+    if (quickEventData.useEmployeeCalendly && quickEventData.employeeId) {
+      const employee = employees.find(e => e.id === quickEventData.employeeId);
+      if (employee?.calendlyUrl) {
+        calendlyUrl = employee.calendlyUrl;
+      }
+    }
+    
+    if (!calendlyUrl) {
+      alert('Bitte geben Sie eine Calendly-URL ein oder wählen Sie einen Mitarbeiter mit Calendly-Link aus.');
+      return;
+    }
+    
+    // Finde die Position zum Einfügen
+    let insertOrder = 1;
+    if (quickEventData.insertAfterMilestoneId) {
+      const afterMilestone = milestones.find(m => m.id === quickEventData.insertAfterMilestoneId);
+      if (afterMilestone) {
+        insertOrder = afterMilestone.order + 0.5; // Dazwischen einfügen
+      }
+    } else {
+      // Am Anfang der noch offenen Milestones einfügen
+      const firstOpenMilestone = milestones.find(m => m.status !== 'done');
+      if (firstOpenMilestone) {
+        insertOrder = firstOpenMilestone.order - 0.5;
+      }
+    }
+    
+    // Meilenstein erstellen
+    const dueDate = addDays(new Date(), 3).toISOString(); // 3 Tage Zeit zum Buchen
+    
+    addMilestone({
+      projectId: project.id,
+      order: insertOrder,
+      title: quickEventData.title,
+      description: quickEventData.description,
+      status: 'open', // Direkt offen setzen
+      dueDate,
+      originalDueDate: dueDate,
+      owner: 'client',
+      category: 'onboarding',
+      actionType: 'calendly',
+      actionUrl: calendlyUrl,
+      actionLabel: 'Termin buchen',
+      assignedEmployeeId: quickEventData.employeeId || undefined
+    });
+    
+    // Reset und schließen
+    setQuickEventData({
+      title: 'Termin vereinbaren',
+      description: 'Bitte buchen Sie über den folgenden Link einen passenden Termin für unser nächstes Gespräch.',
+      employeeId: '',
+      customCalendlyUrl: '',
+      useEmployeeCalendly: true,
+      insertAfterMilestoneId: '',
+    });
+    setShowQuickEvent(false);
+  };
   
   // Calculate progress
   const completedMilestones = milestones.filter(m => m.status === 'done').length;
@@ -585,12 +660,23 @@ export default function ProjectDetail() {
             Kunde: {client?.name || 'Unbekannt'} • {client?.email}
           </p>
         </div>
-        <button
-          onClick={() => setShowDeleteConfirm(true)}
-          className="px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-        >
-          Projekt löschen
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowQuickEvent(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Termin einschieben
+          </button>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            Projekt löschen
+          </button>
+        </div>
       </div>
       
       {/* Delete Confirmation Modal */}
@@ -613,6 +699,159 @@ export default function ProjectDetail() {
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
               >
                 Löschen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Event/Call Modal */}
+      {showQuickEvent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-dark-900">Termin einschieben</h3>
+                <p className="text-sm text-dark-500">Fügen Sie einen Calendly-Termin für den Kunden ein</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-dark-700 mb-1">Titel</label>
+                <input
+                  type="text"
+                  value={quickEventData.title}
+                  onChange={(e) => setQuickEventData({ ...quickEventData, title: e.target.value })}
+                  placeholder="z.B. Zwischenbesprechung, Feedback-Call"
+                  className="w-full px-3 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-dark-700 mb-1">Nachricht an Kunden</label>
+                <textarea
+                  value={quickEventData.description}
+                  onChange={(e) => setQuickEventData({ ...quickEventData, description: e.target.value })}
+                  rows={2}
+                  placeholder="Diese Nachricht sieht der Kunde..."
+                  className="w-full px-3 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                />
+              </div>
+
+              {/* Calendly-Link Auswahl */}
+              <div className="border border-dark-200 rounded-lg p-4 bg-dark-50">
+                <label className="block text-sm font-medium text-dark-700 mb-3">Calendly-Link</label>
+                
+                <div className="space-y-3">
+                  {/* Option 1: Mitarbeiter auswählen */}
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={quickEventData.useEmployeeCalendly}
+                      onChange={() => setQuickEventData({ ...quickEventData, useEmployeeCalendly: true, customCalendlyUrl: '' })}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-dark-700">Mitarbeiter-Calendly verwenden</span>
+                      {quickEventData.useEmployeeCalendly && (
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          {employees.filter(e => e.calendlyUrl && e.isActive).map(emp => (
+                            <button
+                              key={emp.id}
+                              onClick={() => setQuickEventData({ ...quickEventData, employeeId: emp.id })}
+                              className={`flex items-center gap-2 p-2 rounded-lg border-2 transition-all text-left ${
+                                quickEventData.employeeId === emp.id 
+                                  ? 'border-primary-500 bg-primary-50' 
+                                  : 'border-dark-200 hover:border-dark-300'
+                              }`}
+                            >
+                              <div 
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium"
+                                style={{ backgroundColor: emp.color }}
+                              >
+                                {emp.name.split(' ').map(n => n[0]).join('')}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-dark-900 truncate">{emp.name}</p>
+                                <p className="text-xs text-dark-500">{emp.role}</p>
+                              </div>
+                              {quickEventData.employeeId === emp.id && (
+                                <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </button>
+                          ))}
+                          {employees.filter(e => e.calendlyUrl && e.isActive).length === 0 && (
+                            <p className="col-span-2 text-sm text-dark-400 p-2">Keine Mitarbeiter mit Calendly-Link vorhanden</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </label>
+
+                  {/* Option 2: Manueller Link */}
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={!quickEventData.useEmployeeCalendly}
+                      onChange={() => setQuickEventData({ ...quickEventData, useEmployeeCalendly: false, employeeId: '' })}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-dark-700">Eigenen Calendly-Link eingeben</span>
+                      {!quickEventData.useEmployeeCalendly && (
+                        <input
+                          type="url"
+                          value={quickEventData.customCalendlyUrl}
+                          onChange={(e) => setQuickEventData({ ...quickEventData, customCalendlyUrl: e.target.value })}
+                          placeholder="https://calendly.com/..."
+                          className="mt-2 w-full px-3 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                        />
+                      )}
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Position in Timeline */}
+              <div>
+                <label className="block text-sm font-medium text-dark-700 mb-1">Einfügen nach Meilenstein</label>
+                <select
+                  value={quickEventData.insertAfterMilestoneId}
+                  onChange={(e) => setQuickEventData({ ...quickEventData, insertAfterMilestoneId: e.target.value })}
+                  className="w-full px-3 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="">Am Anfang (vor dem nächsten offenen Schritt)</option>
+                  {milestones.map(m => (
+                    <option key={m.id} value={m.id}>
+                      Nach: {m.title} {m.status === 'done' ? '✓' : ''}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-dark-400 mt-1">Der Termin wird direkt für den Kunden sichtbar sein</p>
+              </div>
+            </div>
+            
+            <div className="flex gap-3 justify-end mt-6">
+              <button
+                onClick={() => setShowQuickEvent(false)}
+                className="px-4 py-2 text-dark-600 hover:text-dark-800"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={handleAddQuickEvent}
+                disabled={quickEventData.useEmployeeCalendly ? !quickEventData.employeeId : !quickEventData.customCalendlyUrl}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
+              >
+                Termin einschieben
               </button>
             </div>
           </div>
