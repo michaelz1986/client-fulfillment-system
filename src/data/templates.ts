@@ -1,4 +1,4 @@
-import { ProjectTemplate, InfrastructureTemplate } from '../types/index';
+import { ProjectTemplate, InfrastructureTemplate, UploadRequirement } from '../types/index';
 
 // ============================================
 // MEILENSTEIN-VORLAGEN gemäß Mandat Kapitel 6
@@ -103,7 +103,33 @@ export const defaultTemplates: ProjectTemplate[] = [
       'SSL-Zertifikat aktiv',
       'Analytics eingerichtet',
       'Conversion Tracking eingerichtet'
-    ])
+    ]),
+    uploadRequirements: [
+      {
+        id: 'upload-logo',
+        category: 'corporate_identity',
+        title: 'Logo & Corporate Identity',
+        description: 'Ihr Logo in hoher Auflösung (PNG, SVG) sowie Farbcodes und Schriftarten.',
+        required: true,
+        examples: 'Logo als PNG/SVG, Farb-Palette, ggf. Styleguide'
+      },
+      {
+        id: 'upload-photos',
+        category: 'photos',
+        title: 'Bilder & Fotos',
+        description: 'Produktfotos, Team-Bilder oder andere Bilder für die Landingpage.',
+        required: false,
+        examples: 'Produktfotos, Teamfotos, Hintergrundbilder'
+      },
+      {
+        id: 'upload-texts',
+        category: 'documents',
+        title: 'Texte & Inhalte',
+        description: 'Alle Texte für die Landingpage inkl. Überschriften, Beschreibungen, Call-to-Actions.',
+        required: true,
+        examples: 'Headlines, Produktbeschreibungen, USPs, Kontaktdaten'
+      }
+    ]
   },
 
   // Vorlage 2: Website (ca. 8 Wochen)
@@ -222,7 +248,41 @@ export const defaultTemplates: ProjectTemplate[] = [
       'Analytics eingerichtet',
       'Conversion Tracking eingerichtet',
       'Backup-System konfiguriert'
-    ])
+    ]),
+    uploadRequirements: [
+      {
+        id: 'upload-logo',
+        category: 'corporate_identity',
+        title: 'Logo & Corporate Identity',
+        description: 'Logo in hoher Auflösung sowie alle CI-Elemente (Farben, Schriften, Styleguide).',
+        required: true,
+        examples: 'Logo (PNG/SVG), Farbcodes, Schriftarten, ggf. Brand Guidelines'
+      },
+      {
+        id: 'upload-photos',
+        category: 'photos',
+        title: 'Bildmaterial',
+        description: 'Alle Fotos und Bilder für die Website (Team, Produkte, Referenzen, etc.).',
+        required: true,
+        examples: 'Teamfotos, Produktbilder, Bürofotos, Referenz-Logos'
+      },
+      {
+        id: 'upload-texts',
+        category: 'documents',
+        title: 'Texte & Seitenstruktur',
+        description: 'Alle Texte für die einzelnen Seiten sowie die gewünschte Navigationsstruktur.',
+        required: true,
+        examples: 'Seitentexte, Menüstruktur, Meta-Beschreibungen, Impressum/Datenschutz'
+      },
+      {
+        id: 'upload-other',
+        category: 'other',
+        title: 'Sonstige Materialien',
+        description: 'PDFs, Broschüren, Preislisten oder andere Dokumente zum Download.',
+        required: false,
+        examples: 'PDF-Kataloge, Preislisten, Zertifikate'
+      }
+    ]
   },
 
   // Vorlage 3: Software Development (agil, ca. 12 Wochen)

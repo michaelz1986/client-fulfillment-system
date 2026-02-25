@@ -416,8 +416,9 @@ export default function ProjectDetail() {
   const [documentType, setDocumentType] = useState<ProjectDocumentType>('offer');
   const [documentName, setDocumentName] = useState('');
   
-  // Quick Event/Call Modal State
+  // Quick Event Modal State
   const [showQuickEvent, setShowQuickEvent] = useState(false);
+  const [quickEventType, setQuickEventType] = useState<'calendly' | 'upload' | 'feedback'>('calendly');
   const [quickEventData, setQuickEventData] = useState({
     title: 'Termin vereinbaren',
     description: 'Bitte buchen Sie über den folgenden Link einen passenden Termin für unser nächstes Gespräch.',
@@ -425,6 +426,9 @@ export default function ProjectDetail() {
     customCalendlyUrl: '',
     useEmployeeCalendly: true,
     insertAfterMilestoneId: '' as string,
+    // Upload-spezifisch
+    uploadCategory: 'corporate_identity' as FileCategory,
+    uploadRequired: true,
   });
   
   // New Milestone State
@@ -579,59 +583,94 @@ export default function ProjectDetail() {
     }
   };
 
-  // Quick Event/Call hinzufügen
+  // Quick Event hinzufügen (Termin, Upload-Anforderung, Feedback)
   const handleAddQuickEvent = () => {
     if (!project) return;
-    
-    // Calendly URL bestimmen
-    let calendlyUrl = quickEventData.customCalendlyUrl;
-    if (quickEventData.useEmployeeCalendly && quickEventData.employeeId) {
-      const employee = employees.find(e => e.id === quickEventData.employeeId);
-      if (employee?.calendlyUrl) {
-        calendlyUrl = employee.calendlyUrl;
-      }
-    }
-    
-    if (!calendlyUrl) {
-      alert('Bitte geben Sie eine Calendly-URL ein oder wählen Sie einen Mitarbeiter mit Calendly-Link aus.');
-      return;
-    }
     
     // Finde die Position zum Einfügen
     let insertOrder = 1;
     if (quickEventData.insertAfterMilestoneId) {
       const afterMilestone = milestones.find(m => m.id === quickEventData.insertAfterMilestoneId);
       if (afterMilestone) {
-        insertOrder = afterMilestone.order + 0.5; // Dazwischen einfügen
+        insertOrder = afterMilestone.order + 0.5;
       }
     } else {
-      // Am Anfang der noch offenen Milestones einfügen
       const firstOpenMilestone = milestones.find(m => m.status !== 'done');
       if (firstOpenMilestone) {
         insertOrder = firstOpenMilestone.order - 0.5;
       }
     }
     
-    // Meilenstein erstellen
-    const dueDate = addDays(new Date(), 3).toISOString(); // 3 Tage Zeit zum Buchen
+    const dueDate = addDays(new Date(), quickEventType === 'calendly' ? 3 : 5).toISOString();
     
-    addMilestone({
-      projectId: project.id,
-      order: insertOrder,
-      title: quickEventData.title,
-      description: quickEventData.description,
-      status: 'open', // Direkt offen setzen
-      dueDate,
-      originalDueDate: dueDate,
-      owner: 'client',
-      category: 'onboarding',
-      actionType: 'calendly',
-      actionUrl: calendlyUrl,
-      actionLabel: 'Termin buchen',
-      assignedEmployeeId: quickEventData.employeeId || undefined
-    });
+    // Je nach Event-Typ unterschiedliche Einstellungen
+    if (quickEventType === 'calendly') {
+      let calendlyUrl = quickEventData.customCalendlyUrl;
+      if (quickEventData.useEmployeeCalendly && quickEventData.employeeId) {
+        const employee = employees.find(e => e.id === quickEventData.employeeId);
+        if (employee?.calendlyUrl) {
+          calendlyUrl = employee.calendlyUrl;
+        }
+      }
+      
+      if (!calendlyUrl) {
+        alert('Bitte geben Sie eine Calendly-URL ein oder wählen Sie einen Mitarbeiter mit Calendly-Link aus.');
+        return;
+      }
+      
+      addMilestone({
+        projectId: project.id,
+        order: insertOrder,
+        title: quickEventData.title,
+        description: quickEventData.description,
+        status: 'open',
+        dueDate,
+        originalDueDate: dueDate,
+        owner: 'client',
+        category: 'onboarding',
+        actionType: 'calendly',
+        actionUrl: calendlyUrl,
+        actionLabel: 'Termin buchen',
+        assignedEmployeeId: quickEventData.employeeId || undefined
+      });
+    } else if (quickEventType === 'upload') {
+      addMilestone({
+        projectId: project.id,
+        order: insertOrder,
+        title: quickEventData.title,
+        description: quickEventData.description,
+        status: 'open',
+        dueDate,
+        originalDueDate: dueDate,
+        owner: 'client',
+        category: 'content',
+        actionType: 'upload',
+        actionLabel: 'Dateien hochladen',
+        requiredUploadCategory: quickEventData.uploadCategory
+      });
+    } else if (quickEventType === 'feedback') {
+      addMilestone({
+        projectId: project.id,
+        order: insertOrder,
+        title: quickEventData.title,
+        description: quickEventData.description,
+        status: 'open',
+        dueDate,
+        originalDueDate: dueDate,
+        owner: 'client',
+        category: 'review',
+        actionType: 'feedback',
+        actionLabel: 'Feedback abgeben'
+      });
+    }
     
     // Reset und schließen
+    resetQuickEventData();
+    setShowQuickEvent(false);
+  };
+
+  const resetQuickEventData = () => {
+    setQuickEventType('calendly');
     setQuickEventData({
       title: 'Termin vereinbaren',
       description: 'Bitte buchen Sie über den folgenden Link einen passenden Termin für unser nächstes Gespräch.',
@@ -639,8 +678,9 @@ export default function ProjectDetail() {
       customCalendlyUrl: '',
       useEmployeeCalendly: true,
       insertAfterMilestoneId: '',
+      uploadCategory: 'corporate_identity',
+      uploadRequired: true,
     });
-    setShowQuickEvent(false);
   };
   
   // Calculate progress
@@ -663,12 +703,12 @@ export default function ProjectDetail() {
         <div className="flex gap-2">
           <button
             onClick={() => setShowQuickEvent(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-700 hover:bg-primary-100 rounded-lg transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Termin einschieben
+            Aufgabe einschieben
           </button>
           <button
             onClick={() => setShowDeleteConfirm(true)}
@@ -705,22 +745,65 @@ export default function ProjectDetail() {
         </div>
       )}
 
-      {/* Quick Event/Call Modal */}
+      {/* Quick Event Modal (Termin, Upload, Feedback) */}
       {showQuickEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-dark-900">Aufgabe einschieben</h3>
+              <button onClick={() => { setShowQuickEvent(false); resetQuickEventData(); }} className="text-dark-400 hover:text-dark-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-dark-900">Termin einschieben</h3>
-                <p className="text-sm text-dark-500">Fügen Sie einen Calendly-Termin für den Kunden ein</p>
-              </div>
+              </button>
             </div>
             
+            {/* Event-Typ Auswahl */}
+            <div className="flex gap-2 mb-6">
+              <button
+                onClick={() => {
+                  setQuickEventType('calendly');
+                  setQuickEventData({ ...quickEventData, title: 'Termin vereinbaren', description: 'Bitte buchen Sie über den folgenden Link einen passenden Termin für unser nächstes Gespräch.' });
+                }}
+                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                  quickEventType === 'calendly' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-dark-200 hover:border-dark-300'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="font-medium">Termin</span>
+              </button>
+              <button
+                onClick={() => {
+                  setQuickEventType('upload');
+                  setQuickEventData({ ...quickEventData, title: 'Dateien hochladen', description: 'Bitte laden Sie die angeforderten Dateien hier im Portal hoch.' });
+                }}
+                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                  quickEventType === 'upload' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-dark-200 hover:border-dark-300'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <span className="font-medium">Upload</span>
+              </button>
+              <button
+                onClick={() => {
+                  setQuickEventType('feedback');
+                  setQuickEventData({ ...quickEventData, title: 'Feedback geben', description: 'Bitte teilen Sie uns Ihr Feedback mit.' });
+                }}
+                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                  quickEventType === 'feedback' ? 'border-amber-500 bg-amber-50 text-amber-700' : 'border-dark-200 hover:border-dark-300'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span className="font-medium">Feedback</span>
+              </button>
+            </div>
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-dark-700 mb-1">Titel</label>
@@ -728,7 +811,7 @@ export default function ProjectDetail() {
                   type="text"
                   value={quickEventData.title}
                   onChange={(e) => setQuickEventData({ ...quickEventData, title: e.target.value })}
-                  placeholder="z.B. Zwischenbesprechung, Feedback-Call"
+                  placeholder={quickEventType === 'calendly' ? 'z.B. Zwischenbesprechung' : quickEventType === 'upload' ? 'z.B. Logo & CI hochladen' : 'z.B. Feedback zum Entwurf'}
                   className="w-full px-3 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
@@ -744,81 +827,106 @@ export default function ProjectDetail() {
                 />
               </div>
 
-              {/* Calendly-Link Auswahl */}
-              <div className="border border-dark-200 rounded-lg p-4 bg-dark-50">
-                <label className="block text-sm font-medium text-dark-700 mb-3">Calendly-Link</label>
-                
-                <div className="space-y-3">
-                  {/* Option 1: Mitarbeiter auswählen */}
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={quickEventData.useEmployeeCalendly}
-                      onChange={() => setQuickEventData({ ...quickEventData, useEmployeeCalendly: true, customCalendlyUrl: '' })}
-                      className="mt-1"
-                    />
-                    <div className="flex-1">
-                      <span className="text-sm font-medium text-dark-700">Mitarbeiter-Calendly verwenden</span>
-                      {quickEventData.useEmployeeCalendly && (
-                        <div className="mt-2 grid grid-cols-2 gap-2">
-                          {employees.filter(e => e.calendlyUrl && e.isActive).map(emp => (
-                            <button
-                              key={emp.id}
-                              onClick={() => setQuickEventData({ ...quickEventData, employeeId: emp.id })}
-                              className={`flex items-center gap-2 p-2 rounded-lg border-2 transition-all text-left ${
-                                quickEventData.employeeId === emp.id 
-                                  ? 'border-primary-500 bg-primary-50' 
-                                  : 'border-dark-200 hover:border-dark-300'
-                              }`}
-                            >
-                              <div 
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium"
-                                style={{ backgroundColor: emp.color }}
+              {/* Calendly-spezifische Optionen */}
+              {quickEventType === 'calendly' && (
+                <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                  <label className="block text-sm font-medium text-dark-700 mb-3">Calendly-Link</label>
+                  
+                  <div className="space-y-3">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={quickEventData.useEmployeeCalendly}
+                        onChange={() => setQuickEventData({ ...quickEventData, useEmployeeCalendly: true, customCalendlyUrl: '' })}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <span className="text-sm font-medium text-dark-700">Mitarbeiter-Calendly</span>
+                        {quickEventData.useEmployeeCalendly && (
+                          <div className="mt-2 grid grid-cols-2 gap-2">
+                            {employees.filter(e => e.calendlyUrl && e.isActive).map(emp => (
+                              <button
+                                key={emp.id}
+                                onClick={() => setQuickEventData({ ...quickEventData, employeeId: emp.id })}
+                                className={`flex items-center gap-2 p-2 rounded-lg border-2 transition-all text-left ${
+                                  quickEventData.employeeId === emp.id ? 'border-blue-500 bg-white' : 'border-dark-200 bg-white hover:border-dark-300'
+                                }`}
                               >
-                                {emp.name.split(' ').map(n => n[0]).join('')}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-dark-900 truncate">{emp.name}</p>
-                                <p className="text-xs text-dark-500">{emp.role}</p>
-                              </div>
-                              {quickEventData.employeeId === emp.id && (
-                                <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                              )}
-                            </button>
-                          ))}
-                          {employees.filter(e => e.calendlyUrl && e.isActive).length === 0 && (
-                            <p className="col-span-2 text-sm text-dark-400 p-2">Keine Mitarbeiter mit Calendly-Link vorhanden</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </label>
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium" style={{ backgroundColor: emp.color }}>
+                                  {emp.name.split(' ').map(n => n[0]).join('')}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-dark-900 truncate">{emp.name}</p>
+                                </div>
+                              </button>
+                            ))}
+                            {employees.filter(e => e.calendlyUrl && e.isActive).length === 0 && (
+                              <p className="col-span-2 text-sm text-dark-400 p-2">Keine Mitarbeiter mit Calendly-Link</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </label>
 
-                  {/* Option 2: Manueller Link */}
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={!quickEventData.useEmployeeCalendly}
-                      onChange={() => setQuickEventData({ ...quickEventData, useEmployeeCalendly: false, employeeId: '' })}
-                      className="mt-1"
-                    />
-                    <div className="flex-1">
-                      <span className="text-sm font-medium text-dark-700">Eigenen Calendly-Link eingeben</span>
-                      {!quickEventData.useEmployeeCalendly && (
-                        <input
-                          type="url"
-                          value={quickEventData.customCalendlyUrl}
-                          onChange={(e) => setQuickEventData({ ...quickEventData, customCalendlyUrl: e.target.value })}
-                          placeholder="https://calendly.com/..."
-                          className="mt-2 w-full px-3 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
-                        />
-                      )}
-                    </div>
-                  </label>
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={!quickEventData.useEmployeeCalendly}
+                        onChange={() => setQuickEventData({ ...quickEventData, useEmployeeCalendly: false, employeeId: '' })}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <span className="text-sm font-medium text-dark-700">Eigenen Link eingeben</span>
+                        {!quickEventData.useEmployeeCalendly && (
+                          <input
+                            type="url"
+                            value={quickEventData.customCalendlyUrl}
+                            onChange={(e) => setQuickEventData({ ...quickEventData, customCalendlyUrl: e.target.value })}
+                            placeholder="https://calendly.com/..."
+                            className="mt-2 w-full px-3 py-2 border border-dark-300 rounded-lg text-sm bg-white"
+                          />
+                        )}
+                      </div>
+                    </label>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Upload-spezifische Optionen */}
+              {quickEventType === 'upload' && (
+                <div className="border border-purple-200 rounded-lg p-4 bg-purple-50">
+                  <label className="block text-sm font-medium text-dark-700 mb-3">Welche Dateien werden benötigt?</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: 'corporate_identity', label: '🎨 Corporate Identity & Logos', desc: 'Logo, Farben, Schriften' },
+                      { value: 'photos', label: '📸 Fotos & Bilder', desc: 'Produktfotos, Team, etc.' },
+                      { value: 'documents', label: '📄 Dokumente & Texte', desc: 'Texte, PDFs, Word' },
+                      { value: 'other', label: '📁 Sonstige Dateien', desc: 'Andere Materialien' }
+                    ].map(cat => (
+                      <button
+                        key={cat.value}
+                        onClick={() => setQuickEventData({ ...quickEventData, uploadCategory: cat.value as FileCategory })}
+                        className={`flex flex-col items-start p-3 rounded-lg border-2 transition-all text-left ${
+                          quickEventData.uploadCategory === cat.value ? 'border-purple-500 bg-white' : 'border-dark-200 bg-white hover:border-dark-300'
+                        }`}
+                      >
+                        <span className="text-sm font-medium">{cat.label}</span>
+                        <span className="text-xs text-dark-400">{cat.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Feedback hat keine spezifischen Optionen */}
+              {quickEventType === 'feedback' && (
+                <div className="border border-amber-200 rounded-lg p-4 bg-amber-50">
+                  <p className="text-sm text-amber-700">
+                    <strong>Tipp:</strong> Der Kunde erhält ein Textfeld, in dem er sein Feedback schreiben kann. 
+                    Beschreiben Sie in der Nachricht genau, wozu Sie Feedback benötigen.
+                  </p>
+                </div>
+              )}
 
               {/* Position in Timeline */}
               <div>
@@ -835,23 +943,29 @@ export default function ProjectDetail() {
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-dark-400 mt-1">Der Termin wird direkt für den Kunden sichtbar sein</p>
+                <p className="text-xs text-dark-400 mt-1">Die Aufgabe wird direkt für den Kunden sichtbar sein</p>
               </div>
             </div>
             
             <div className="flex gap-3 justify-end mt-6">
               <button
-                onClick={() => setShowQuickEvent(false)}
+                onClick={() => { setShowQuickEvent(false); resetQuickEventData(); }}
                 className="px-4 py-2 text-dark-600 hover:text-dark-800"
               >
                 Abbrechen
               </button>
               <button
                 onClick={handleAddQuickEvent}
-                disabled={quickEventData.useEmployeeCalendly ? !quickEventData.employeeId : !quickEventData.customCalendlyUrl}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
+                disabled={quickEventType === 'calendly' && (quickEventData.useEmployeeCalendly ? !quickEventData.employeeId : !quickEventData.customCalendlyUrl)}
+                className={`px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                  quickEventType === 'calendly' ? 'bg-blue-600 hover:bg-blue-700' :
+                  quickEventType === 'upload' ? 'bg-purple-600 hover:bg-purple-700' :
+                  'bg-amber-600 hover:bg-amber-700'
+                }`}
               >
-                Termin einschieben
+                {quickEventType === 'calendly' ? 'Termin einschieben' : 
+                 quickEventType === 'upload' ? 'Upload anfordern' : 
+                 'Feedback anfordern'}
               </button>
             </div>
           </div>

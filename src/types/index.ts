@@ -185,6 +185,16 @@ export interface InfrastructureTemplate {
   title: string;
 }
 
+// Upload-Anforderung für Produkte/Projekte
+export interface UploadRequirement {
+  id: string;
+  category: FileCategory;
+  title: string;
+  description: string;
+  required: boolean;
+  examples?: string;  // Beispiele was hochgeladen werden soll
+}
+
 export interface ProjectTemplate {
   id: string;
   type: ProjectType | 'custom';
@@ -192,6 +202,7 @@ export interface ProjectTemplate {
   description: string;
   milestones: MilestoneTemplate[];
   infrastructureTasks: InfrastructureTemplate[];
+  uploadRequirements?: UploadRequirement[];  // Was muss der Kunde hochladen?
   isCustom?: boolean;
   createdAt?: string;
   updatedAt?: string;
