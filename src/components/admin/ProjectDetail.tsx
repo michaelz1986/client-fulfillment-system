@@ -423,6 +423,7 @@ export default function ProjectDetail() {
     owner: 'agency' as MilestoneOwner,
     category: 'development' as MilestoneCategory,
     dueDate: format(addDays(new Date(), 7), 'yyyy-MM-dd'),
+    actionType: '' as 'calendly' | 'upload' | 'link' | 'feedback' | 'approval' | '',
     actionUrl: '',
     actionLabel: ''
   });
@@ -542,6 +543,7 @@ export default function ProjectDetail() {
       originalDueDate: dueDate,
       owner: newMilestone.owner,
       category: newMilestone.category,
+      actionType: newMilestone.actionType || undefined,
       actionUrl: newMilestone.actionUrl || undefined,
       actionLabel: newMilestone.actionLabel || undefined
     });
@@ -553,6 +555,7 @@ export default function ProjectDetail() {
       owner: 'agency',
       category: 'development',
       dueDate: format(addDays(new Date(), 7), 'yyyy-MM-dd'),
+      actionType: '',
       actionUrl: '',
       actionLabel: ''
     });
@@ -685,24 +688,58 @@ export default function ProjectDetail() {
                 />
               </div>
               
+              {/* Action Type für Kunden-Milestones */}
+              {newMilestone.owner === 'client' && (
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 mb-1">Kunden-Aktion</label>
+                  <select
+                    value={newMilestone.actionType}
+                    onChange={(e) => setNewMilestone({ ...newMilestone, actionType: e.target.value as typeof newMilestone.actionType })}
+                    className="w-full px-3 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="">Keine spezielle Aktion</option>
+                    <option value="upload">📁 Dateien hochladen</option>
+                    <option value="feedback">💬 Feedback abgeben</option>
+                    <option value="approval">✅ Freigabe erteilen</option>
+                    <option value="calendly">📅 Termin buchen (Calendly)</option>
+                    <option value="link">🔗 Externer Link</option>
+                  </select>
+                  <p className="text-xs text-dark-400 mt-1">
+                    {newMilestone.actionType === 'upload' && 'Kunde kann Dateien direkt im Portal hochladen'}
+                    {newMilestone.actionType === 'feedback' && 'Kunde kann schriftliches Feedback geben'}
+                    {newMilestone.actionType === 'approval' && 'Kunde erteilt eine formelle Freigabe'}
+                    {newMilestone.actionType === 'calendly' && 'Kunde bucht einen Termin über Calendly'}
+                    {newMilestone.actionType === 'link' && 'Kunde wird zu externem Link weitergeleitet'}
+                  </p>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-dark-700 mb-1">Action URL (optional)</label>
+                  <label className="block text-sm font-medium text-dark-700 mb-1">
+                    {newMilestone.actionType === 'calendly' ? 'Calendly URL' : 'Action URL (optional)'}
+                  </label>
                   <input
                     type="url"
                     value={newMilestone.actionUrl}
                     onChange={(e) => setNewMilestone({ ...newMilestone, actionUrl: e.target.value })}
-                    placeholder="https://..."
+                    placeholder={newMilestone.actionType === 'calendly' ? 'https://calendly.com/...' : 'https://...'}
                     className="w-full px-3 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-dark-700 mb-1">Action Label (optional)</label>
+                  <label className="block text-sm font-medium text-dark-700 mb-1">Button-Text (optional)</label>
                   <input
                     type="text"
                     value={newMilestone.actionLabel}
                     onChange={(e) => setNewMilestone({ ...newMilestone, actionLabel: e.target.value })}
-                    placeholder="z.B. Link öffnen"
+                    placeholder={
+                      newMilestone.actionType === 'upload' ? 'Dateien hochladen' :
+                      newMilestone.actionType === 'feedback' ? 'Feedback abgeben' :
+                      newMilestone.actionType === 'approval' ? 'Freigabe erteilen' :
+                      newMilestone.actionType === 'calendly' ? 'Termin buchen' :
+                      'Link öffnen'
+                    }
                     className="w-full px-3 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   />
                 </div>

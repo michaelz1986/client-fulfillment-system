@@ -117,7 +117,8 @@ export interface Milestone {
   assignedEmployeeId?: string;  // Zugewiesener Mitarbeiter für diesen Meilenstein
   actionUrl?: string;
   actionLabel?: string;
-  actionType?: 'calendly' | 'upload' | 'link' | 'feedback';  // Art der Action
+  actionType?: 'calendly' | 'upload' | 'link' | 'feedback' | 'approval';  // Art der Action
+  requiredUploadCategory?: FileCategory;  // Welche Upload-Kategorie wird benötigt?
   feedbackNote?: string;  // Feedback/Notiz für den Kunden
   submittedAt?: string;
   completedAt?: string;
@@ -174,6 +175,7 @@ export interface MilestoneTemplate {
   owner: MilestoneOwner;
   category: MilestoneCategory;
   daysOffset: number;
+  actionType?: 'calendly' | 'upload' | 'link' | 'feedback' | 'approval';  // Typ der Kunden-Aktion
   actionUrl?: string;
   actionLabel?: string;
 }

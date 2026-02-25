@@ -31,12 +31,12 @@ export const defaultTemplates: ProjectTemplate[] = [
         id: 'ms-2',
         order: 2,
         title: 'Inhalte hochladen',
-        description: 'Bitte laden Sie alle Texte, Bilder und Dokumente in den für Sie vorbereiteten Ordner hoch.',
+        description: 'Bitte laden Sie alle Texte, Bilder und Dokumente direkt hier im Portal hoch.',
         owner: 'client',
         category: 'content',
         daysOffset: 7,
-        actionUrl: 'https://drive.google.com',
-        actionLabel: 'Zum Google Drive Ordner'
+        actionType: 'upload',
+        actionLabel: 'Dateien hochladen'
       },
       {
         id: 'ms-3',
@@ -55,8 +55,8 @@ export const defaultTemplates: ProjectTemplate[] = [
         owner: 'client',
         category: 'review',
         daysOffset: 5,
-        actionUrl: 'https://figma.com',
-        actionLabel: 'Design ansehen'
+        actionType: 'feedback',
+        actionLabel: 'Feedback abgeben'
       },
       {
         id: 'ms-5',
@@ -75,7 +75,8 @@ export const defaultTemplates: ProjectTemplate[] = [
         owner: 'client',
         category: 'review',
         daysOffset: 2,
-        actionLabel: 'Vorschau ansehen'
+        actionType: 'approval',
+        actionLabel: 'Freigabe erteilen'
       },
       {
         id: 'ms-7',
@@ -131,8 +132,8 @@ export const defaultTemplates: ProjectTemplate[] = [
         owner: 'client',
         category: 'content',
         daysOffset: 14,
-        actionUrl: 'https://drive.google.com',
-        actionLabel: 'Zum Google Drive Ordner'
+        actionType: 'upload',
+        actionLabel: 'Dateien hochladen'
       },
       {
         id: 'ms-3',
@@ -151,8 +152,8 @@ export const defaultTemplates: ProjectTemplate[] = [
         owner: 'client',
         category: 'review',
         daysOffset: 5,
-        actionUrl: 'https://figma.com',
-        actionLabel: 'Wireframes ansehen'
+        actionType: 'feedback',
+        actionLabel: 'Feedback abgeben'
       },
       {
         id: 'ms-5',
@@ -171,8 +172,8 @@ export const defaultTemplates: ProjectTemplate[] = [
         owner: 'client',
         category: 'review',
         daysOffset: 7,
-        actionUrl: 'https://figma.com',
-        actionLabel: 'Design ansehen'
+        actionType: 'feedback',
+        actionLabel: 'Feedback abgeben'
       },
       {
         id: 'ms-7',
@@ -191,7 +192,8 @@ export const defaultTemplates: ProjectTemplate[] = [
         owner: 'client',
         category: 'review',
         daysOffset: 5,
-        actionLabel: 'Staging-Seite ansehen'
+        actionType: 'approval',
+        actionLabel: 'Freigabe erteilen'
       },
       {
         id: 'ms-9',

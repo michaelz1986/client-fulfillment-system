@@ -171,8 +171,14 @@ function CurrentTaskCard({
   project: Project;
   onSubmit: () => void;
 }) {
+  const { addProjectFile } = useApp();
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadCategory, setUploadCategory] = useState<FileCategory>('corporate_identity');
+  const [uploadedFiles, setUploadedFiles] = useState<{name: string; size: number}[]>([]);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   
   const dueDate = parseISO(milestone.dueDate);
   const daysUntilDue = differenceInDays(dueDate, new Date());
@@ -183,10 +189,36 @@ function CurrentTaskCard({
     setIsSubmitting(true);
     onSubmit();
     setShowConfirmation(true);
+    setShowUploadModal(false);
+    setShowFeedbackModal(false);
     setTimeout(() => {
       setIsSubmitting(false);
     }, 500);
   };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files;
+    if (!fileList) return;
+    
+    Array.from(fileList).forEach(file => {
+      addProjectFile({
+        projectId: project.id,
+        milestoneId: milestone.id,
+        category: uploadCategory,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        uploadedBy: 'client',
+        url: URL.createObjectURL(file)
+      });
+      setUploadedFiles(prev => [...prev, { name: file.name, size: file.size }]);
+    });
+    
+    e.target.value = '';
+  };
+
+  // Bestimme welche Art von Action-UI gezeigt werden soll
+  const actionType = milestone.actionType || 'link';
   
   if (isSubmitted || showConfirmation) {
     return (
@@ -247,6 +279,21 @@ function CurrentTaskCard({
         <p className="text-dark-600 mb-6 leading-relaxed">
           {milestone.description}
         </p>
+
+        {/* Feedback-Hinweis falls vorhanden */}
+        {milestone.feedbackNote && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-blue-800 mb-1">Hinweis von Ihrem Projektmanager:</p>
+                <p className="text-sm text-blue-700">{milestone.feedbackNote}</p>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Deadline - freundlich formuliert */}
         <div className="flex items-center gap-3 mb-8 text-sm text-dark-500">
@@ -255,46 +302,195 @@ function CurrentTaskCard({
           </svg>
           <span>Ideal bis {format(dueDate, 'd. MMMM yyyy', { locale: de })}</span>
         </div>
-        
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          {milestone.actionUrl && (
-            <a
-              href={milestone.actionUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-dark-100 hover:bg-dark-200 text-dark-700 rounded-xl font-medium transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              {milestone.actionLabel || 'Aufgabe ansehen'}
-            </a>
-          )}
-          
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 text-white rounded-xl font-medium transition-all shadow-sm hover:shadow"
-          >
-            {isSubmitting ? (
-              <>
-                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+
+        {/* Upload Action Type */}
+        {actionType === 'upload' && (
+          <div className="mb-6">
+            {!showUploadModal ? (
+              <button
+                onClick={() => setShowUploadModal(true)}
+                className="w-full flex items-center justify-center gap-3 p-6 border-2 border-dashed border-primary-300 rounded-2xl bg-primary-50 hover:bg-primary-100 transition-colors"
+              >
+                <svg className="w-8 h-8 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
-                Wird gesendet...
-              </>
+                <div className="text-left">
+                  <p className="font-semibold text-primary-700">{milestone.actionLabel || 'Dateien hochladen'}</p>
+                  <p className="text-sm text-primary-600">Klicken Sie hier, um Ihre Dateien hochzuladen</p>
+                </div>
+              </button>
             ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Fertig - Weiter geht's!
-              </>
+              <div className="border border-dark-200 rounded-2xl p-6 bg-dark-50">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-semibold text-dark-900">Dateien hochladen</h4>
+                  <button onClick={() => setShowUploadModal(false)} className="text-dark-400 hover:text-dark-600">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <p className="text-sm text-dark-600 mb-4">Wählen Sie die Kategorie für Ihre Dateien:</p>
+                
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  {FILE_CATEGORIES.map(cat => (
+                    <button
+                      key={cat.value}
+                      onClick={() => setUploadCategory(cat.value)}
+                      className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all text-left text-sm ${
+                        uploadCategory === cat.value 
+                          ? 'border-primary-500 bg-primary-50' 
+                          : 'border-dark-200 hover:border-dark-300'
+                      }`}
+                    >
+                      <span className="text-lg">{cat.icon}</span>
+                      <span className="font-medium text-dark-700">{cat.label}</span>
+                    </button>
+                  ))}
+                </div>
+                
+                <label className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-primary-300 rounded-xl bg-white cursor-pointer hover:bg-primary-50 transition-colors">
+                  <svg className="w-8 h-8 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span className="text-primary-700 font-medium">Dateien auswählen</span>
+                  <input type="file" multiple onChange={handleFileUpload} className="hidden" />
+                </label>
+                
+                {uploadedFiles.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <p className="text-sm font-medium text-dark-700">{uploadedFiles.length} Datei(en) hochgeladen:</p>
+                    {uploadedFiles.map((file, i) => (
+                      <div key={i} className="flex items-center gap-2 p-2 bg-primary-50 rounded-lg">
+                        <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-sm text-dark-700 truncate">{file.name}</span>
+                        <span className="text-xs text-dark-400">({(file.size / 1024).toFixed(1)} KB)</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
-          </button>
-        </div>
+          </div>
+        )}
+
+        {/* Feedback Action Type */}
+        {actionType === 'feedback' && (
+          <div className="mb-6">
+            {!showFeedbackModal ? (
+              <button
+                onClick={() => setShowFeedbackModal(true)}
+                className="w-full flex items-center justify-center gap-3 p-6 border-2 border-dashed border-amber-300 rounded-2xl bg-amber-50 hover:bg-amber-100 transition-colors"
+              >
+                <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <div className="text-left">
+                  <p className="font-semibold text-amber-700">{milestone.actionLabel || 'Feedback abgeben'}</p>
+                  <p className="text-sm text-amber-600">Teilen Sie uns Ihre Wünsche und Anmerkungen mit</p>
+                </div>
+              </button>
+            ) : (
+              <div className="border border-dark-200 rounded-2xl p-6 bg-dark-50">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-semibold text-dark-900">Ihr Feedback</h4>
+                  <button onClick={() => setShowFeedbackModal(false)} className="text-dark-400 hover:text-dark-600">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <textarea
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder="Beschreiben Sie Ihre Änderungswünsche, Anmerkungen oder Fragen..."
+                  className="w-full h-32 px-4 py-3 border border-dark-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+                />
+                
+                <p className="text-xs text-dark-400 mt-2">Tipp: Seien Sie so spezifisch wie möglich, damit wir Ihre Wünsche optimal umsetzen können.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Approval Action Type */}
+        {actionType === 'approval' && (
+          <div className="mb-6 p-6 bg-green-50 border border-green-200 rounded-2xl">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="font-semibold text-green-800 mb-1">Bereit zur Freigabe?</h4>
+                <p className="text-sm text-green-700">
+                  Mit Ihrer Freigabe bestätigen Sie, dass alles Ihren Vorstellungen entspricht und wir fortfahren können.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Calendly Link */}
+        {actionType === 'calendly' && milestone.actionUrl && (
+          <a
+            href={milestone.actionUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mb-6 w-full flex items-center justify-center gap-3 p-6 border-2 border-blue-200 rounded-2xl bg-blue-50 hover:bg-blue-100 transition-colors"
+          >
+            <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <div className="text-left">
+              <p className="font-semibold text-blue-700">{milestone.actionLabel || 'Termin buchen'}</p>
+              <p className="text-sm text-blue-600">Wählen Sie einen passenden Termin aus</p>
+            </div>
+          </a>
+        )}
+
+        {/* External Link (for viewing designs etc) */}
+        {actionType === 'link' && milestone.actionUrl && (
+          <a
+            href={milestone.actionUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mb-6 flex items-center justify-center gap-2 w-full p-4 bg-dark-100 hover:bg-dark-200 text-dark-700 rounded-xl font-medium transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            {milestone.actionLabel || 'Aufgabe ansehen'}
+          </a>
+        )}
+        
+        {/* Submit Button */}
+        <button
+          onClick={handleSubmit}
+          disabled={isSubmitting || (actionType === 'upload' && uploadedFiles.length === 0 && showUploadModal)}
+          className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all shadow-sm hover:shadow text-lg"
+        >
+          {isSubmitting ? (
+            <>
+              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Wird gesendet...
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              {actionType === 'approval' ? 'Freigabe erteilen' : 'Fertig - Weiter geht\'s!'}
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
