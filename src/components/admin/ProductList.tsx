@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
-import { defaultTemplates, getAllTemplates } from '../../data/templates';
+import { defaultTemplates, getAllTemplates, getModifiedDefaultTemplate } from '../../data/templates';
 import { ProjectTemplate } from '../../types/index';
 
 export default function ProductList() {
@@ -72,15 +72,21 @@ export default function ProductList() {
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-dark-900 mb-4">Standard-Vorlagen</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {defaultTemplates.map((template) => (
-            <TemplateCard 
-              key={template.id} 
-              template={template} 
-              isDefault={true}
-              getTypeLabel={getTypeLabel}
-              getTypeColor={getTypeColor}
-            />
-          ))}
+          {defaultTemplates.map((template) => {
+            const modifiedVersion = getModifiedDefaultTemplate(template.id, customTemplates);
+            const displayTemplate = modifiedVersion || template;
+            return (
+              <TemplateCard 
+                key={template.id} 
+                template={displayTemplate}
+                originalTemplate={template}
+                isDefault={true}
+                isModified={!!modifiedVersion}
+                getTypeLabel={getTypeLabel}
+                getTypeColor={getTypeColor}
+              />
+            );
+          })}
         </div>
       </div>
 
@@ -159,29 +165,43 @@ export default function ProductList() {
 
 function TemplateCard({ 
   template, 
+  originalTemplate,
   isDefault,
+  isModified,
   getTypeLabel,
   getTypeColor,
   onDelete
 }: { 
   template: ProjectTemplate; 
+  originalTemplate?: ProjectTemplate;
   isDefault: boolean;
+  isModified?: boolean;
   getTypeLabel: (type: string) => string;
   getTypeColor: (type: string) => string;
   onDelete?: () => void;
 }) {
   const totalDays = template.milestones.reduce((sum, m) => sum + m.daysOffset, 0);
   const weeks = Math.ceil(totalDays / 7);
+  const linkId = originalTemplate?.id || template.id;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-dark-200 p-5 hover:shadow-md transition-shadow">
+    <div className={`bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition-shadow ${
+      isModified ? 'border-amber-300' : 'border-dark-200'
+    }`}>
       <div className="flex items-start justify-between mb-3">
         <span className={`px-2 py-1 text-xs font-medium rounded ${getTypeColor(template.type)}`}>
           {getTypeLabel(template.type)}
         </span>
-        {isDefault && (
-          <span className="text-xs text-dark-400">Standard</span>
-        )}
+        <div className="flex items-center gap-2">
+          {isModified && (
+            <span className="px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded">
+              Angepasst
+            </span>
+          )}
+          {isDefault && !isModified && (
+            <span className="text-xs text-dark-400">Standard</span>
+          )}
+        </div>
       </div>
       
       <h3 className="font-semibold text-dark-900 mb-1">{template.name}</h3>
@@ -204,10 +224,10 @@ function TemplateCard({
 
       <div className="flex items-center gap-2">
         <Link
-          to={`/admin/products/${template.id}`}
+          to={`/admin/products/${linkId}`}
           className="flex-1 text-center px-3 py-2 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
         >
-          {isDefault ? 'Ansehen' : 'Bearbeiten'}
+          Bearbeiten
         </Link>
         {!isDefault && onDelete && (
           <button

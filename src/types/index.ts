@@ -119,6 +119,7 @@ export interface Milestone {
   actionLabel?: string;
   actionType?: 'calendly' | 'upload' | 'link' | 'feedback' | 'approval';  // Art der Action
   requiredUploadCategory?: FileCategory;  // Welche Upload-Kategorie wird benötigt?
+  uploadInstructions?: string;  // Was soll der Kunde hochladen? (Admin konfigurierbar)
   feedbackNote?: string;  // Feedback/Notiz für den Kunden
   submittedAt?: string;
   completedAt?: string;
@@ -204,6 +205,8 @@ export interface ProjectTemplate {
   infrastructureTasks: InfrastructureTemplate[];
   uploadRequirements?: UploadRequirement[];  // Was muss der Kunde hochladen?
   isCustom?: boolean;
+  isModifiedDefault?: boolean;  // Ist das eine angepasste Version einer Standard-Vorlage?
+  originalDefaultId?: string;   // ID der Original-Standard-Vorlage
   createdAt?: string;
   updatedAt?: string;
 }

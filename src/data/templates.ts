@@ -395,16 +395,27 @@ export const defaultTemplates: ProjectTemplate[] = [
 
 // Getter für alle verfügbaren Templates (Default + Custom)
 export const getTemplateByType = (type: string, customTemplates: ProjectTemplate[] = []): ProjectTemplate | undefined => {
-  // Erst in Custom-Templates suchen
+  // Zuerst nach modifizierten Standard-Vorlagen suchen
+  const defaultTemplate = defaultTemplates.find(t => t.type === type);
+  if (defaultTemplate) {
+    const modifiedVersion = customTemplates.find(t => t.originalDefaultId === defaultTemplate.id && t.isModifiedDefault);
+    if (modifiedVersion) return modifiedVersion;
+  }
+  
+  // Dann in Custom-Templates suchen (nicht-modifizierte)
   const customTemplate = customTemplates.find(t => t.type === type || t.id === type);
   if (customTemplate) return customTemplate;
   
   // Dann in Default-Templates suchen
-  return defaultTemplates.find(t => t.type === type);
+  return defaultTemplate;
 };
 
 export const getTemplateById = (id: string, customTemplates: ProjectTemplate[] = []): ProjectTemplate | undefined => {
-  // Erst in Custom-Templates suchen
+  // Zuerst prüfen ob es eine modifizierte Version gibt
+  const modifiedVersion = customTemplates.find(t => t.originalDefaultId === id && t.isModifiedDefault);
+  if (modifiedVersion) return modifiedVersion;
+  
+  // Dann in Custom-Templates suchen
   const customTemplate = customTemplates.find(t => t.id === id);
   if (customTemplate) return customTemplate;
   
@@ -413,5 +424,12 @@ export const getTemplateById = (id: string, customTemplates: ProjectTemplate[] =
 };
 
 export const getAllTemplates = (customTemplates: ProjectTemplate[] = []): ProjectTemplate[] => {
-  return [...defaultTemplates, ...customTemplates];
+  // Filtere modifizierte Standard-Vorlagen aus, da sie nur als Ersatz dienen
+  const nonModifiedCustom = customTemplates.filter(t => !t.isModifiedDefault);
+  return [...defaultTemplates, ...nonModifiedCustom];
+};
+
+// Hilfsfunktion um zu prüfen ob eine Standard-Vorlage modifiziert wurde
+export const getModifiedDefaultTemplate = (defaultId: string, customTemplates: ProjectTemplate[] = []): ProjectTemplate | undefined => {
+  return customTemplates.find(t => t.originalDefaultId === defaultId && t.isModifiedDefault);
 };

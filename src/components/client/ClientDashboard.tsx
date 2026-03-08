@@ -218,7 +218,9 @@ function CurrentTaskCard({
   };
 
   // Bestimme welche Art von Action-UI gezeigt werden soll
-  const actionType = milestone.actionType || 'link';
+  // Wenn actionLabel "Google Drive" enthält, behandle es als Upload
+  const isLegacyGoogleDrive = milestone.actionLabel?.toLowerCase().includes('google drive');
+  const actionType = isLegacyGoogleDrive ? 'upload' : (milestone.actionType || 'link');
   
   if (isSubmitted || showConfirmation) {
     return (
@@ -306,6 +308,21 @@ function CurrentTaskCard({
         {/* Upload Action Type */}
         {actionType === 'upload' && (
           <div className="mb-6">
+            {/* Upload-Anweisungen vom Admin */}
+            {milestone.uploadInstructions && (
+              <div className="mb-4 p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-purple-800 mb-1">Diese Unterlagen benötigen wir von Ihnen:</p>
+                    <p className="text-sm text-purple-700 whitespace-pre-line">{milestone.uploadInstructions}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {!showUploadModal ? (
               <button
                 onClick={() => setShowUploadModal(true)}
@@ -315,7 +332,7 @@ function CurrentTaskCard({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
                 <div className="text-left">
-                  <p className="font-semibold text-primary-700">{milestone.actionLabel || 'Dateien hochladen'}</p>
+                  <p className="font-semibold text-primary-700">Dateien hochladen</p>
                   <p className="text-sm text-primary-600">Klicken Sie hier, um Ihre Dateien hochzuladen</p>
                 </div>
               </button>

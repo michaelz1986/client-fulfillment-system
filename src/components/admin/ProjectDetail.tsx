@@ -32,9 +32,15 @@ function MilestoneEditor({
   const [editDueDate, setEditDueDate] = useState(format(parseISO(milestone.dueDate), 'yyyy-MM-dd'));
   const [editActionUrl, setEditActionUrl] = useState(milestone.actionUrl || '');
   const [editActionLabel, setEditActionLabel] = useState(milestone.actionLabel || '');
+  const [editActionType, setEditActionType] = useState<'calendly' | 'upload' | 'link' | 'feedback' | 'approval' | ''>(milestone.actionType || '');
+  const [editUploadInstructions, setEditUploadInstructions] = useState(milestone.uploadInstructions || '');
   
   const daysOverdue = differenceInDays(new Date(), parseISO(milestone.dueDate));
   const isOverdue = milestone.status !== 'done' && milestone.status !== 'locked' && daysOverdue > 0;
+  
+  // Erkennt ob es ein Legacy Google Drive Milestone ist
+  const isLegacyGoogleDrive = milestone.actionLabel?.toLowerCase().includes('google drive');
+  const effectiveActionType = isLegacyGoogleDrive ? 'upload' : milestone.actionType;
   
   const handleSave = () => {
     onUpdate({
@@ -42,8 +48,10 @@ function MilestoneEditor({
       title: editTitle,
       description: editDescription,
       dueDate: new Date(editDueDate).toISOString(),
-      actionUrl: editActionUrl || undefined,
-      actionLabel: editActionLabel || undefined,
+      actionUrl: editActionType === 'upload' ? undefined : (editActionUrl || undefined),
+      actionLabel: editActionType === 'upload' ? undefined : (editActionLabel || undefined),
+      actionType: editActionType || undefined,
+      uploadInstructions: editActionType === 'upload' ? (editUploadInstructions || undefined) : undefined,
     });
     setIsEditing(false);
   };
@@ -109,26 +117,66 @@ function MilestoneEditor({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-dark-700 mb-1">Action URL</label>
-                  <input
-                    type="url"
-                    value={editActionUrl}
-                    onChange={(e) => setEditActionUrl(e.target.value)}
-                    placeholder="https://..."
+                  <label className="block text-sm font-medium text-dark-700 mb-1">Kunden-Aktion</label>
+                  <select
+                    value={editActionType}
+                    onChange={(e) => setEditActionType(e.target.value as typeof editActionType)}
+                    className="w-full px-3 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="">Keine</option>
+                    <option value="upload">📁 Dateien hochladen</option>
+                    <option value="feedback">💬 Feedback abgeben</option>
+                    <option value="approval">✅ Freigabe erteilen</option>
+                    <option value="calendly">📅 Termin buchen</option>
+                    <option value="link">🔗 Externer Link</option>
+                  </select>
+                </div>
+              </div>
+              
+              {/* Upload-Anweisungen - nur bei Upload-Typ */}
+              {editActionType === 'upload' && (
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 mb-1">
+                    Upload-Anweisungen
+                    <span className="text-dark-400 font-normal ml-1">(Was soll der Kunde hochladen?)</span>
+                  </label>
+                  <textarea
+                    value={editUploadInstructions}
+                    onChange={(e) => setEditUploadInstructions(e.target.value)}
+                    rows={3}
+                    placeholder="z.B. Logo in hoher Auflösung (PNG/SVG), Fotos vom Team, Texte für die Website..."
                     className="w-full px-3 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   />
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-dark-700 mb-1">Action Button Label</label>
-                <input
-                  type="text"
-                  value={editActionLabel}
-                  onChange={(e) => setEditActionLabel(e.target.value)}
-                  placeholder="z.B. 'Zum Google Drive Ordner'"
-                  className="w-full px-3 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                />
-              </div>
+              )}
+              
+              {/* URL und Label - nur bei Link/Calendly */}
+              {(editActionType === 'link' || editActionType === 'calendly') && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-dark-700 mb-1">
+                      {editActionType === 'calendly' ? 'Calendly URL' : 'Link URL'}
+                    </label>
+                    <input
+                      type="url"
+                      value={editActionUrl}
+                      onChange={(e) => setEditActionUrl(e.target.value)}
+                      placeholder="https://..."
+                      className="w-full px-3 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-700 mb-1">Button-Text</label>
+                    <input
+                      type="text"
+                      value={editActionLabel}
+                      onChange={(e) => setEditActionLabel(e.target.value)}
+                      placeholder={editActionType === 'calendly' ? 'Termin buchen' : 'Link öffnen'}
+                      className="w-full px-3 py-2 border border-dark-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  </div>
+                </div>
+              )}
               <div className="flex gap-2">
                 <button
                   onClick={handleSave}
@@ -173,7 +221,7 @@ function MilestoneEditor({
                 </div>
               </div>
               
-              <div className="flex items-center gap-4 mt-3">
+              <div className="flex flex-wrap items-center gap-2 mt-3">
                 <span className={`text-xs px-2 py-1 rounded-full ${
                   milestone.owner === 'client' 
                     ? 'bg-amber-100 text-amber-800' 
@@ -187,17 +235,52 @@ function MilestoneEditor({
                   {isOverdue && ` (${daysOverdue} Tage überfällig)`}
                 </span>
                 
-                {milestone.actionUrl && (
+                {/* Action Type Badges */}
+                {effectiveActionType === 'upload' && (
+                  <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700">
+                    📁 Upload
+                  </span>
+                )}
+                {milestone.actionType === 'feedback' && (
+                  <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700">
+                    💬 Feedback
+                  </span>
+                )}
+                {milestone.actionType === 'approval' && (
+                  <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                    ✅ Freigabe
+                  </span>
+                )}
+                {milestone.actionType === 'calendly' && milestone.actionUrl && (
+                  <a
+                    href={milestone.actionUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200"
+                  >
+                    📅 {milestone.actionLabel || 'Termin buchen'}
+                  </a>
+                )}
+                {milestone.actionType === 'link' && milestone.actionUrl && (
                   <a
                     href={milestone.actionUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-primary-600 hover:underline"
                   >
-                    {milestone.actionLabel || 'Link öffnen'}
+                    🔗 {milestone.actionLabel || 'Link öffnen'}
                   </a>
                 )}
               </div>
+              
+              {/* Upload-Anweisungen anzeigen */}
+              {effectiveActionType === 'upload' && milestone.uploadInstructions && (
+                <div className="mt-2 p-2 bg-purple-50 rounded-lg border border-purple-100">
+                  <p className="text-xs text-purple-700">
+                    <span className="font-medium">Benötigte Unterlagen:</span> {milestone.uploadInstructions}
+                  </p>
+                </div>
+              )}
             </>
           )}
         </div>
