@@ -16,7 +16,8 @@ import {
   Employee,
   ProjectFile,
   ProjectDocument,
-  ProjectDocumentType
+  ProjectDocumentType,
+  PasswordResetToken
 } from '../types/index';
 import { loadState, saveState, initialAppState } from '../data/initialData';
 import { getTemplateByType, getAllTemplates } from '../data/templates';
@@ -57,7 +58,9 @@ type Action =
   | { type: 'ADD_PROJECT_DOCUMENT'; payload: ProjectDocument }
   | { type: 'DELETE_PROJECT_DOCUMENT'; payload: string }
   | { type: 'CREATE_USER'; payload: User }
+  | { type: 'UPDATE_USER'; payload: User }
   | { type: 'UPDATE_USER_LOGIN'; payload: string }
+  | { type: 'SET_PASSWORD_RESET_TOKEN'; payload: { userId: string; token: PasswordResetToken | undefined } }
   | { type: 'RESET_STATE' }
   | { type: 'LOAD_STATE'; payload: AppState };
 
@@ -314,6 +317,24 @@ function appReducer(state: AppState, action: Action): AppState {
         users: [...state.users, action.payload]
       };
 
+    case 'UPDATE_USER':
+      return {
+        ...state,
+        users: state.users.map(u =>
+          u.id === action.payload.id ? action.payload : u
+        )
+      };
+
+    case 'SET_PASSWORD_RESET_TOKEN':
+      return {
+        ...state,
+        users: state.users.map(u =>
+          u.id === action.payload.userId
+            ? { ...u, passwordResetToken: action.payload.token }
+            : u
+        )
+      };
+
     case 'UPDATE_USER_LOGIN':
       return {
         ...state,
@@ -397,6 +418,13 @@ interface AppContextType {
   // User Management
   createClientUser: (clientId: string, email: string, name: string) => { user: User; password: string };
   getUserByClientId: (clientId: string) => User | undefined;
+  getUserByEmail: (email: string) => User | undefined;
+  resetUserPassword: (userId: string) => { newPassword: string };
+  requestPasswordReset: (email: string) => { success: boolean; token?: string; error?: string };
+  validatePasswordResetToken: (token: string) => User | null;
+  setNewPasswordWithToken: (token: string, newPassword: string) => { success: boolean; error?: string };
+  sendCredentialsEmail: (clientId: string) => { success: boolean; message: string };
+  sendPasswordResetEmail: (email: string) => { success: boolean; message: string };
   // User Preferences
   updateUserPreferences: (userId: string, preferences: NotificationPreferences, phone?: string) => void;
   // Utilities
@@ -877,6 +905,162 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return state.users.find(u => u.clientId === clientId);
   };
 
+  const getUserByEmail = (email: string): User | undefined => {
+    return state.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  };
+
+  // Generiert einen Reset-Token
+  const generateResetToken = (): string => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let token = '';
+    for (let i = 0; i < 32; i++) {
+      token += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return token;
+  };
+
+  // Admin: Passwort eines Benutzers zurücksetzen
+  const resetUserPassword = (userId: string): { newPassword: string } => {
+    const user = state.users.find(u => u.id === userId);
+    if (!user) {
+      throw new Error('Benutzer nicht gefunden');
+    }
+
+    const newPassword = generatePassword();
+    const updatedUser: User = {
+      ...user,
+      password: newPassword,
+      passwordResetToken: undefined,
+      mustChangePassword: true
+    };
+    dispatch({ type: 'UPDATE_USER', payload: updatedUser });
+    return { newPassword };
+  };
+
+  // Passwort-Reset anfordern (für "Passwort vergessen")
+  const requestPasswordReset = (email: string): { success: boolean; token?: string; error?: string } => {
+    const user = state.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (!user) {
+      return { success: false, error: 'E-Mail-Adresse nicht gefunden' };
+    }
+
+    const token = generateResetToken();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 Stunden gültig
+
+    const resetToken: PasswordResetToken = {
+      token,
+      expiresAt,
+      createdAt: new Date().toISOString()
+    };
+
+    dispatch({ type: 'SET_PASSWORD_RESET_TOKEN', payload: { userId: user.id, token: resetToken } });
+    return { success: true, token };
+  };
+
+  // Token validieren
+  const validatePasswordResetToken = (token: string): User | null => {
+    const user = state.users.find(u => 
+      u.passwordResetToken?.token === token && 
+      new Date(u.passwordResetToken.expiresAt) > new Date()
+    );
+    return user || null;
+  };
+
+  // Neues Passwort mit Token setzen
+  const setNewPasswordWithToken = (token: string, newPassword: string): { success: boolean; error?: string } => {
+    const user = validatePasswordResetToken(token);
+    if (!user) {
+      return { success: false, error: 'Ungültiger oder abgelaufener Link' };
+    }
+
+    if (newPassword.length < 8) {
+      return { success: false, error: 'Das Passwort muss mindestens 8 Zeichen lang sein' };
+    }
+
+    const updatedUser: User = {
+      ...user,
+      password: newPassword,
+      passwordResetToken: undefined,
+      mustChangePassword: false
+    };
+    dispatch({ type: 'UPDATE_USER', payload: updatedUser });
+    return { success: true };
+  };
+
+  // E-Mail mit Zugangsdaten senden (simuliert)
+  const sendCredentialsEmail = (clientId: string): { success: boolean; message: string } => {
+    const client = state.clients.find(c => c.id === clientId);
+    const user = state.users.find(u => u.clientId === clientId);
+
+    if (!client || !user) {
+      return { success: false, message: 'Kunde oder Benutzer nicht gefunden' };
+    }
+
+    // In einer echten Anwendung würde hier ein E-Mail-Service aufgerufen werden
+    console.log('=== SIMULATED EMAIL ===');
+    console.log(`To: ${client.email}`);
+    console.log(`Subject: Ihre Zugangsdaten für das Kunden-Portal`);
+    console.log(`
+Hallo ${client.name},
+
+Ihr Zugang zum Kunden-Portal wurde eingerichtet.
+
+Portal: ${window.location.origin}
+E-Mail: ${user.email}
+
+Bitte setzen Sie Ihr Passwort über folgenden Link:
+${window.location.origin}/reset-password
+
+Bei Fragen stehen wir Ihnen gerne zur Verfügung.
+
+Mit freundlichen Grüßen,
+Ihr Team
+    `);
+    console.log('======================');
+
+    return { 
+      success: true, 
+      message: `E-Mail wurde an ${client.email} gesendet (simuliert)`
+    };
+  };
+
+  // Passwort-Reset E-Mail senden (simuliert)
+  const sendPasswordResetEmail = (email: string): { success: boolean; message: string } => {
+    const result = requestPasswordReset(email);
+    
+    if (!result.success) {
+      return { success: false, message: result.error || 'Fehler beim Anfordern des Passwort-Resets' };
+    }
+
+    const user = state.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    
+    // In einer echten Anwendung würde hier ein E-Mail-Service aufgerufen werden
+    console.log('=== SIMULATED PASSWORD RESET EMAIL ===');
+    console.log(`To: ${email}`);
+    console.log(`Subject: Passwort zurücksetzen`);
+    console.log(`
+Hallo ${user?.name || ''},
+
+Sie haben das Zurücksetzen Ihres Passworts angefordert.
+
+Klicken Sie auf folgenden Link, um ein neues Passwort zu setzen:
+${window.location.origin}/reset-password?token=${result.token}
+
+Dieser Link ist 24 Stunden gültig.
+
+Falls Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail ignorieren.
+
+Mit freundlichen Grüßen,
+Ihr Team
+    `);
+    console.log('======================================');
+
+    return { 
+      success: true, 
+      message: `E-Mail wurde an ${email} gesendet`
+    };
+  };
+
   // ============================================
   // USER PREFERENCES FUNCTIONS
   // ============================================
@@ -937,6 +1121,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     getDocumentsByProjectId,
     createClientUser,
     getUserByClientId,
+    getUserByEmail,
+    resetUserPassword,
+    requestPasswordReset,
+    validatePasswordResetToken,
+    setNewPasswordWithToken,
+    sendCredentialsEmail,
+    sendPasswordResetEmail,
     updateUserPreferences,
     resetState: resetAppState
   };

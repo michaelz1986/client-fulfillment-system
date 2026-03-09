@@ -232,14 +232,140 @@ function CredentialsModal({
   );
 }
 
+// Benachrichtigung Toast
+function Toast({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) {
+  return (
+    <div className={`fixed bottom-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
+      type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+    }`}>
+      {type === 'success' ? (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      ) : (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      )}
+      <span>{message}</span>
+      <button onClick={onClose} className="ml-2 hover:opacity-80">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+// Passwort zurücksetzen Modal
+function ResetPasswordModal({
+  client,
+  newPassword,
+  onClose,
+  onSendEmail
+}: {
+  client: Client;
+  newPassword: string;
+  onClose: () => void;
+  onSendEmail: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    const text = `Neues Passwort für ${client.name}\n\nPortal: ${window.location.origin}\nE-Mail: ${client.email}\nNeues Passwort: ${newPassword}`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+            <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-dark-900">Passwort zurückgesetzt</h3>
+            <p className="text-sm text-dark-500">{client.name}</p>
+          </div>
+        </div>
+        
+        <div className="bg-dark-50 rounded-lg p-4 mb-4 space-y-3">
+          <div>
+            <label className="block text-xs text-dark-500 uppercase tracking-wider mb-1">E-Mail</label>
+            <p className="text-sm font-mono text-dark-900">{client.email}</p>
+          </div>
+          <div>
+            <label className="block text-xs text-dark-500 uppercase tracking-wider mb-1">Neues Passwort</label>
+            <p className="text-sm font-mono text-dark-900 bg-amber-50 px-2 py-1 rounded">{newPassword}</p>
+          </div>
+        </div>
+
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+          <p className="text-sm text-amber-800">
+            <strong>Hinweis:</strong> Der Kunde muss bei der nächsten Anmeldung ein neues Passwort setzen.
+          </p>
+        </div>
+        
+        <div className="flex gap-3">
+          <button
+            onClick={copyToClipboard}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-dark-100 hover:bg-dark-200 text-dark-700 rounded-lg transition-colors"
+          >
+            {copied ? (
+              <>
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Kopiert!
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+                Kopieren
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => {
+              onSendEmail();
+              onClose();
+            }}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded-lg transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Per E-Mail senden
+          </button>
+        </div>
+        
+        <button
+          onClick={onClose}
+          className="w-full mt-3 px-4 py-2 text-dark-600 hover:text-dark-800 transition-colors"
+        >
+          Schließen
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function ClientList() {
-  const { state, createClient, updateClient, deleteClient, getProjectsByClientId, createClientUser, getUserByClientId } = useApp();
+  const { state, createClient, updateClient, deleteClient, getProjectsByClientId, createClientUser, getUserByClientId, resetUserPassword, sendCredentialsEmail, sendPasswordResetEmail } = useApp();
   
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [newCredentials, setNewCredentials] = useState<{ client: Client; email: string; password: string } | null>(null);
+  const [resetPasswordData, setResetPasswordData] = useState<{ client: Client; newPassword: string } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   
   // Filter clients
   const filteredClients = state.clients.filter(client =>
@@ -269,9 +395,37 @@ export default function ClientList() {
     }
   };
 
-  const handleCreateCredentials = (client: Client) => {
+  const handleCreateCredentials = (client: Client, sendEmail: boolean = false) => {
     const { password } = createClientUser(client.id, client.email, client.name);
+    
+    if (sendEmail) {
+      // E-Mail mit Zugangsdaten senden
+      const result = sendCredentialsEmail(client.id);
+      showToast(result.message, result.success ? 'success' : 'error');
+    }
+    
     setNewCredentials({ client, email: client.email, password });
+  };
+
+  const handleResetPassword = (client: Client) => {
+    const clientUser = getUserByClientId(client.id);
+    if (!clientUser) {
+      showToast('Kein Benutzer für diesen Kunden gefunden', 'error');
+      return;
+    }
+
+    const { newPassword } = resetUserPassword(clientUser.id);
+    setResetPasswordData({ client, newPassword });
+  };
+
+  const handleSendResetEmail = (client: Client) => {
+    const result = sendPasswordResetEmail(client.email);
+    showToast(result.message, result.success ? 'success' : 'error');
+  };
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
   };
   
   return (
@@ -411,17 +565,51 @@ export default function ClientList() {
                               Noch nie eingeloggt
                             </div>
                           )}
+                          {/* Aktionen für bestehenden Zugang */}
+                          <div className="flex items-center gap-2 mt-2">
+                            <button
+                              onClick={() => handleResetPassword(client)}
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded text-xs font-medium transition-colors"
+                              title="Passwort zurücksetzen"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                              PW Reset
+                            </button>
+                            <button
+                              onClick={() => handleSendResetEmail(client)}
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded text-xs font-medium transition-colors"
+                              title="Reset-Link per E-Mail senden"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                              </svg>
+                              Reset-Mail
+                            </button>
+                          </div>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => handleCreateCredentials(client)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                          </svg>
-                          Zugang erstellen
-                        </button>
+                        <div className="space-y-2">
+                          <button
+                            onClick={() => handleCreateCredentials(client, false)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-lg text-sm font-medium transition-colors w-full justify-center"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                            Zugang erstellen
+                          </button>
+                          <button
+                            onClick={() => handleCreateCredentials(client, true)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 text-dark-500 hover:text-dark-700 hover:bg-dark-100 rounded-lg text-xs transition-colors w-full justify-center"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            Erstellen & E-Mail senden
+                          </button>
+                        </div>
                       )}
                     </td>
                     <td className="px-6 py-4">
@@ -493,6 +681,24 @@ export default function ClientList() {
           client={newCredentials.client}
           credentials={{ email: newCredentials.email, password: newCredentials.password }}
           onClose={() => setNewCredentials(null)}
+        />
+      )}
+
+      {resetPasswordData && (
+        <ResetPasswordModal
+          client={resetPasswordData.client}
+          newPassword={resetPasswordData.newPassword}
+          onClose={() => setResetPasswordData(null)}
+          onSendEmail={() => handleSendResetEmail(resetPasswordData.client)}
+        />
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
         />
       )}
     </div>

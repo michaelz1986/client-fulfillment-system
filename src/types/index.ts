@@ -7,6 +7,13 @@ export interface NotificationPreferences {
   sms: boolean;
 }
 
+// Passwort-Reset-Token
+export interface PasswordResetToken {
+  token: string;
+  expiresAt: string;  // ISO Timestamp
+  createdAt: string;
+}
+
 // Benutzer-Container
 export interface User {
   id: string;
@@ -18,6 +25,8 @@ export interface User {
   notificationPreferences: NotificationPreferences;
   clientId?: string;
   lastLoginAt?: string;  // Letzter Login
+  passwordResetToken?: PasswordResetToken;  // Token für Passwort-Reset
+  mustChangePassword?: boolean;  // Bei erstem Login Passwort ändern
   createdAt: string;
 }
 
